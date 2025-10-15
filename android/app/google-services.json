@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "995065301015",
+    "project_id": "lostpets-36381",
+    "storage_bucket": "lostpets-36381.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:995065301015:android:a7030fbdc97692460db452",
+        "android_client_info": {
+          "package_name": "com.nodamngoodstudios.tempoct2025"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "995065301015-l2hf3jjpm4i0m97359qnmvahkr1pf2va.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.nodamngoodstudios.tempoct2025",
+            "certificate_hash": "d132101b42339b519fe974a0dc0b1fbb47e0b2b4"
+          }
+        },
+        {
+          "client_id": "995065301015-91bi0db6lp7a5qiufns2n71durh7k3nk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAoOGyByf_sY7-9z0QhorM1MA_ROquaIao"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "995065301015-91bi0db6lp7a5qiufns2n71durh7k3nk.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "995065301015-g1o33vlhevl2cl8gqi6kku4clhg42u2h.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.nodamngoodstudios.tempoct2025"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
