@@ -36,7 +36,11 @@
             android:value="2" />
         <meta-data
             android:name="com.google.android.geo.API_KEY"
+<<<<<<< HEAD
             android:value="GOOGLE_MAPS_API_KEY"/> <!--GOOGLE_MAPS_API_KEY-->
+=======
+            android:value="AIzaSyBtMsxojhdHqxIWPATrWE-EgqGt8UeQU7s"/>
+>>>>>>> e76f51f4beb9c0f380ff8ff342ad91168551ceb6
 
     </application>
     <!-- Required to query activities that can process text, see:
