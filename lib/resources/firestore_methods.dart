@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
 import 'package:flutter/material.dart';
+import 'package:tempoct2025/functions/helpers.dart';
 import 'package:tempoct2025/settings/settings.dart';
 
 class FirestoreMethods {
@@ -43,30 +44,45 @@ class FirestoreMethods {
 
 
 
-Future<String?> uploadPetImage(File imageFile, String petId) async {
-  try {
-    // Create a reference to your storage bucket
-    final storageRef = FirebaseStorage.instance.ref();
+// Future<String?> uploadPetImage(File imageFile, String petId) async {
+//   try {
+//     // Create a reference to your storage bucket
+//     final storageRef = FirebaseStorage.instance.ref();
 
-    // Folder: "pet_images/<petId>.jpg"
-    final petImageRef = storageRef.child('pet_images/$petId.jpg');
+//     // Folder: "pet_images/<petId>.jpg"
+//     final petImageRef = storageRef.child('pet_images/$petId.jpg');
 
-    // Upload file
-    await petImageRef.putFile(imageFile);
+//     // Upload file
+//     await petImageRef.putFile(imageFile);
 
-    // Get the public download URL
-    final downloadURL = await petImageRef.getDownloadURL();
-    return downloadURL;
-  } catch (e) {
-    print("Error uploading image: $e");
-    return null;
+//     // Get the public download URL
+//     final downloadURL = await petImageRef.getDownloadURL();
+//     return downloadURL;
+//   } catch (e) {
+//     print("Error uploading image: $e");
+//     return null;
+//   }
+// }
+
+  Future<void> removePetMedia(String petId, String imageUrl) async {
+    final docRef = FirebaseFirestore.instance.collection('pets').doc(petId);
+
+    await FirebaseFirestore.instance.runTransaction((transaction) async {
+      final snapshot = await transaction.get(docRef);
+      if (!snapshot.exists) return;
+
+      final List media = List.from(snapshot['media'] ?? []);
+      media.remove(imageUrl);
+
+      transaction.update(docRef, {'media': media});
+    });
   }
-}
-  Future<void> updatePetMedia(String petId, List<String> newUrls) async {
+
+
+  Future<void> updatePetMedia( String petId, List<String> newUrls) async {
 
     try {
       final docRef = _firestore.collection('pets').doc(petId);
-
       await docRef.update({
         'media': FieldValue.arrayUnion(newUrls),
       }).then((_) {
@@ -148,6 +164,20 @@ Future<String?> uploadPetImage(File imageFile, String petId) async {
     }
   }
 
+  Future<void> updatePetQuestionnaire(SettingsController settings, String petId, List<dynamic> updatedValue) async {
+    try {
+      List<dynamic> petData = settings.petData.value;
+      Map<String,dynamic> petObject = petData.firstWhere((e)=>e["uid"]==petId, orElse: ()=><String,dynamic>{});
+      petObject.update("questionnaire", (v) => updatedValue);
+      settings.setPetData(petData);
+      final docRef = FirebaseFirestore.instance.collection('pets').doc(petId);
+      await docRef.update({"questionnaire": updatedValue});
+    } catch (e) {
+      debugPrint("caught an error running 'updatePetQuestionnaire()' ${e.toString()}");
+    }
+  }
+
+
   Future<List<Map<String,dynamic>>> fetchPetLocations() async {
     final snapshot = await FirebaseFirestore.instance.collection('pets').get();
     
@@ -161,6 +191,14 @@ Future<String?> uploadPetImage(File imageFile, String petId) async {
       };
     }).toList();
   }
+
+
+  Future<List<String>> fetchImageUrls(String userId) async {
+    final doc = await _firestore.collection('users').doc(userId).get();
+    final data = doc.data();
+    if (data == null || data['imageUrls'] == null) return [];
+    return List<String>.from(data['imageUrls']);
+  }    
 
 
 

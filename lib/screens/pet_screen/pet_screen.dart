@@ -6,7 +6,9 @@ import 'package:flutter/rendering.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:tempoct2025/functions/helpers.dart';
+import 'package:tempoct2025/providers/app_state.dart';
 import 'package:tempoct2025/resources/firestore_methods.dart';
+import 'package:tempoct2025/screens/components/edit_pet_view.dart';
 import 'package:tempoct2025/screens/components/multi_image_picker.dart';
 import 'package:tempoct2025/screens/components/pet_map.dart';
 import 'package:tempoct2025/screens/pet_screen/views/media/media_view.dart';
@@ -32,6 +34,8 @@ class _PetScreenState extends State<PetScreen> {
   late String? selectedDisplayImageUrl = null;
   late int _selectedIndex = 0;
   late List<Widget> _widgetOptions = [];
+  late bool isPetOwner = false;
+  // late bool isEditView = false;
   
   // late Map<String,dynamic> petObject = {};
 
@@ -41,31 +45,39 @@ class _PetScreenState extends State<PetScreen> {
     super.initState();
     controller = PageController();
     _settings = Provider.of<SettingsController>(context, listen: false);
+    Map<String,dynamic> userData = _settings.userData.value as Map<String,dynamic>;
     List<dynamic> petData = _settings.petData.value;    
     Map<String,dynamic> petObject = petData.firstWhere((e)=>e["uid"]==widget.petId,orElse: ()=><String,dynamic>{});
+    if (userData["pets"].contains(widget.petId)) {
+      setState(() {
+        isPetOwner = true;
+      });
+    }
     
+    
+    // List<Widget> images = petObject["media"].map<Widget>((url) {
+    //   return Padding(
+    //     padding: const EdgeInsets.all(8.0),
+    //     child: CachedNetworkImage(
+    //       imageUrl: url,
+    //       height: 80,
+    //       width: 80,
+    //       fit: BoxFit.cover,
+    //       placeholder: (context, _) => const Center(
+    //         child: CircularProgressIndicator(strokeWidth: 2),
+    //       ),
+    //       errorWidget: (context, _, __) =>
+    //           const Icon(Icons.broken_image, size: 50),
+    //     ),
+    //   );
+    // }).toList() ;
 
-    List<Widget> images = petObject["media"].map<Widget>((url) {
-      return Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: CachedNetworkImage(
-          imageUrl: url,
-          height: 80,
-          width: 80,
-          fit: BoxFit.cover,
-          placeholder: (context, _) => const Center(
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-          errorWidget: (context, _, __) =>
-              const Icon(Icons.broken_image, size: 50),
-        ),
-      );
-    }).toList() ;
+
 
     _widgetOptions = [
-      OverviewView(petId: widget.petId),
-      MediaView(petId: widget.petId, images: images,),
-      QuestionnaireView(petId: widget.petId,),
+      OverviewView(petId: widget.petId,),
+      MediaView(petId: widget.petId, ),
+      QuestionnaireView(petId: widget.petId, ),
       // PetMapScreen(petObject: petObject,)
     ];
     // settings = Provider.of<SettingsController>(context, listen: false);
@@ -153,329 +165,374 @@ class _PetScreenState extends State<PetScreen> {
         Map<String,dynamic> petObject = petData.firstWhere((e)=>e["uid"]==widget.petId,orElse: ()=><String,dynamic>{});
         
 
-        return Scaffold(
-          appBar: AppBar(
-            title: Text("Pet Profile"),
-          ),
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          // body: SingleChildScrollView(
-          //   child: Column(
-          //     children: [
+        return Consumer<AppState>(
+          builder: (context,appState,child) {
+            return Scaffold(
+              appBar: AppBar(
+                title: Text("Pet Profile"),
+                actions: [
+                  isPetOwner ? 
+                  IconButton(
+                    onPressed: () {
+                      if (appState.isEditView) {
 
-          //         SizedBox(height: 40,),
-          //         // 🐶 Pet Avatar
-          //         Center(
-          //           child: GestureDetector(
-          //             onTap: () => _showMediaPicker(settings),
-          //             child: Center(
-          //               child: Stack(
-          //                 children: [
-          
-          //                   CircleAvatar(
-          //                     radius: 60,
-          //                     backgroundColor: Colors.grey.shade200,
-          //                     backgroundImage: petObject["displayUrl"] != ""
-          //                         ? NetworkImage(petObject["displayUrl"]!) as ImageProvider // keep if you have local file
-          //                         : null,
-          //                     child: (petImage == null && petObject["media"].isEmpty)
-          //                         ? const Icon(Icons.pets, size: 50, color: Colors.grey)
-          //                         : null,
-          //                   ),                      
-          //                   Positioned(
-          //                     bottom: 0,
-          //                     right: 4,
-          //                     child: Container(
-          //                       decoration: BoxDecoration(
-          //                         color: Theme.of(context).colorScheme.primary,
-          //                         shape: BoxShape.circle,
-          //                       ),
-          //                       padding: const EdgeInsets.all(6),
-          //                       child: const Icon(
-          //                         Icons.camera_alt,
-          //                         color: Colors.white,
-          //                         size: 20,
-          //                       ),
-          //                     ),
-          //                   ),
-          //                 ],
-          //               ),
-          //             ),
-          //           ),
-          //         ),
-          //         const SizedBox(height: 24), 
-          //         Divider(),
-          //         Padding(
-          //           padding: const EdgeInsets.symmetric(horizontal: 12.0),
-          //           child: Row(
-          //             children: [
-          //               Expanded(
-          //                 flex: 2,
-          //                 child: Text(
-          //                   "Name: ",
-          //                   style: Theme.of(context).primaryTextTheme.bodySmall,
-          //                 ),
-          //               ),
-          //               Expanded(
-          //                 flex: 4,
-          //                 child: Text(
-          //                   petObject["name"],
-          //                   style: Theme.of(context).primaryTextTheme.bodySmall,
-          //                 ),
-          //               ),
-          //             ],
-          //           ),
-          //         ),
-          //         Divider(),
 
-          //         Padding(
-          //           padding: const EdgeInsets.symmetric(horizontal: 12.0),
-          //           child: Row(
-          //             children: [
-          //               Expanded(
-          //                 flex: 2,
-          //                 child: Text(
-          //                   "Species: ",
-          //                   style: Theme.of(context).primaryTextTheme.bodySmall,
-          //                 ),
-          //               ),
-          //               Expanded(
-          //                 flex: 4,
-          //                 child: Text(
-          //                   petObject["species"],
-          //                   style: Theme.of(context).primaryTextTheme.bodySmall,
-          //                 ),
-          //               ),
-          //             ],
-          //           ),
-          //         ),
-          //         Divider(),  
+                        List<dynamic> media = petObject["media"];
+                        petObject.update("media", (e) => media);
+                        settings.setPetData(settings.petData.value);
 
-          //         Padding(
-          //           padding: const EdgeInsets.symmetric(horizontal: 12.0),
-          //           child: Row(
-          //             children: [
-          //               Expanded(
-          //                 flex: 2,
-          //                 child: Text(
-          //                   "Breed: ",
-          //                   style: Theme.of(context).primaryTextTheme.bodySmall,
-          //                 ),
-          //               ),
-          //               Expanded(
-          //                 flex: 4,
-          //                 child: Text(
-          //                   petObject["breed"],
-          //                   style: Theme.of(context).primaryTextTheme.bodySmall,
-          //                 ),
-          //               ),
-          //             ],
-          //           ),
-          //         ),
-          //         Divider(),                                    
-        
-          //         Padding(
-          //           padding: const EdgeInsets.symmetric(horizontal: 12.0),
-          //           child: Row(
-          //             children: [
-          //               Expanded(
-          //                 flex: 2,
-          //                 child: Text(
-          //                   "Sex: ",
-          //                   style: Theme.of(context).primaryTextTheme.bodySmall,
-          //                 ),
-          //               ),
-          //               Expanded(
-          //                 flex: 4,
-          //                 child: Text(
-          //                   petObject["sex"],
-          //                   style: Theme.of(context).primaryTextTheme.bodySmall,
-          //                 ),
-          //               ),
-          //             ],
-          //           ),
-          //         ),
-          //         Divider(),    
+                        List<dynamic> questionnaire = petObject["questionnaire"];
+                        petObject.update("questionnaire", (e) => questionnaire);
 
-          //         Padding(
-          //           padding: const EdgeInsets.symmetric(horizontal: 12.0),
-          //           child: Row(
-          //             children: [
-          //               Expanded(
-          //                 flex: 2,
-          //                 child: Text(
-          //                   "Age: ",
-          //                   style: Theme.of(context).primaryTextTheme.bodySmall,
-          //                 ),
-          //               ),
-          //               Expanded(
-          //                 flex: 4,
-          //                 child: Text(
-          //                   "${Helpers().calculateAge(petObject["birthYear"]).toString()} years old",
-          //                   style: Theme.of(context).primaryTextTheme.bodySmall,
-          //                 ),
-          //               ),
-          //             ],
-          //           ),
-          //         ),
-          //         Divider(),
 
-          //         // Column(
-          //         //   children: petObject["vaccines"].map((e){
-                      
-          //         //     return Row(
-          //         //       children: <Widget>[
-          //         //         Text("${e["vaccine"]} (${e["year"]})"),
-          //         //       ],
-          //         //     );
-          //         //   }).toList(),
-          //         // ),                                           
-        
-          //         ElevatedButton(
-          //           onPressed: () {
-          //             Navigator.of(context).push(
-          //               MaterialPageRoute(builder: (context) => PetMapScreen(),)
-          //             );                    
-          //           }, 
-          //           child: Text("Map"),
-          //         ),
-        
-         
+                        setState(() {
+                          appState.setIsEditView(false);
+                          settings.setPetData(settings.petData.value);
+                        });                                         
+
+                        SnackBar snackBar = SnackBar(content: Text("Saved ${petObject["name"]}'s data"));
+                        ScaffoldMessenger.of(context).showSnackBar(snackBar);                        
             
-          //         Text(
-          //           "Images: ",
-          //           style: Theme.of(context).primaryTextTheme.labelMedium,
-          //         ),
+                      } else {
+                        setState(() {
+                          appState.setIsEditView(true);
+                        });                    
+                      }
+            
+                    }, 
+                    icon: appState.isEditView ? Icon(Icons.save) : Icon(Icons.edit)
+                  ) : SizedBox()
+                ],
+              ),
+              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+              // body: SingleChildScrollView(
+              //   child: Column(
+              //     children: [
+            
+              //         SizedBox(height: 40,),
+              //         // 🐶 Pet Avatar
+              //         Center(
+              //           child: GestureDetector(
+              //             onTap: () => _showMediaPicker(settings),
+              //             child: Center(
+              //               child: Stack(
+              //                 children: [
+              
+              //                   CircleAvatar(
+              //                     radius: 60,
+              //                     backgroundColor: Colors.grey.shade200,
+              //                     backgroundImage: petObject["displayUrl"] != ""
+              //                         ? NetworkImage(petObject["displayUrl"]!) as ImageProvider // keep if you have local file
+              //                         : null,
+              //                     child: (petImage == null && petObject["media"].isEmpty)
+              //                         ? const Icon(Icons.pets, size: 50, color: Colors.grey)
+              //                         : null,
+              //                   ),                      
+              //                   Positioned(
+              //                     bottom: 0,
+              //                     right: 4,
+              //                     child: Container(
+              //                       decoration: BoxDecoration(
+              //                         color: Theme.of(context).colorScheme.primary,
+              //                         shape: BoxShape.circle,
+              //                       ),
+              //                       padding: const EdgeInsets.all(6),
+              //                       child: const Icon(
+              //                         Icons.camera_alt,
+              //                         color: Colors.white,
+              //                         size: 20,
+              //                       ),
+              //                     ),
+              //                   ),
+              //                 ],
+              //               ),
+              //             ),
+              //           ),
+              //         ),
+              //         const SizedBox(height: 24), 
+              //         Divider(),
+              //         Padding(
+              //           padding: const EdgeInsets.symmetric(horizontal: 12.0),
+              //           child: Row(
+              //             children: [
+              //               Expanded(
+              //                 flex: 2,
+              //                 child: Text(
+              //                   "Name: ",
+              //                   style: Theme.of(context).primaryTextTheme.bodySmall,
+              //                 ),
+              //               ),
+              //               Expanded(
+              //                 flex: 4,
+              //                 child: Text(
+              //                   petObject["name"],
+              //                   style: Theme.of(context).primaryTextTheme.bodySmall,
+              //                 ),
+              //               ),
+              //             ],
+              //           ),
+              //         ),
+              //         Divider(),
+            
+              //         Padding(
+              //           padding: const EdgeInsets.symmetric(horizontal: 12.0),
+              //           child: Row(
+              //             children: [
+              //               Expanded(
+              //                 flex: 2,
+              //                 child: Text(
+              //                   "Species: ",
+              //                   style: Theme.of(context).primaryTextTheme.bodySmall,
+              //                 ),
+              //               ),
+              //               Expanded(
+              //                 flex: 4,
+              //                 child: Text(
+              //                   petObject["species"],
+              //                   style: Theme.of(context).primaryTextTheme.bodySmall,
+              //                 ),
+              //               ),
+              //             ],
+              //           ),
+              //         ),
+              //         Divider(),  
+            
+              //         Padding(
+              //           padding: const EdgeInsets.symmetric(horizontal: 12.0),
+              //           child: Row(
+              //             children: [
+              //               Expanded(
+              //                 flex: 2,
+              //                 child: Text(
+              //                   "Breed: ",
+              //                   style: Theme.of(context).primaryTextTheme.bodySmall,
+              //                 ),
+              //               ),
+              //               Expanded(
+              //                 flex: 4,
+              //                 child: Text(
+              //                   petObject["breed"],
+              //                   style: Theme.of(context).primaryTextTheme.bodySmall,
+              //                 ),
+              //               ),
+              //             ],
+              //           ),
+              //         ),
+              //         Divider(),                                    
+            
+              //         Padding(
+              //           padding: const EdgeInsets.symmetric(horizontal: 12.0),
+              //           child: Row(
+              //             children: [
+              //               Expanded(
+              //                 flex: 2,
+              //                 child: Text(
+              //                   "Sex: ",
+              //                   style: Theme.of(context).primaryTextTheme.bodySmall,
+              //                 ),
+              //               ),
+              //               Expanded(
+              //                 flex: 4,
+              //                 child: Text(
+              //                   petObject["sex"],
+              //                   style: Theme.of(context).primaryTextTheme.bodySmall,
+              //                 ),
+              //               ),
+              //             ],
+              //           ),
+              //         ),
+              //         Divider(),    
+            
+              //         Padding(
+              //           padding: const EdgeInsets.symmetric(horizontal: 12.0),
+              //           child: Row(
+              //             children: [
+              //               Expanded(
+              //                 flex: 2,
+              //                 child: Text(
+              //                   "Age: ",
+              //                   style: Theme.of(context).primaryTextTheme.bodySmall,
+              //                 ),
+              //               ),
+              //               Expanded(
+              //                 flex: 4,
+              //                 child: Text(
+              //                   "${Helpers().calculateAge(petObject["birthYear"]).toString()} years old",
+              //                   style: Theme.of(context).primaryTextTheme.bodySmall,
+              //                 ),
+              //               ),
+              //             ],
+              //           ),
+              //         ),
+              //         Divider(),
+            
+              //         // Column(
+              //         //   children: petObject["vaccines"].map((e){
                           
-          //         SingleChildScrollView(
-          //           scrollDirection: Axis.horizontal,
-          //           child: Row(
-          //             children: petObject["media"].map<Widget>((url) {
-          //               return Padding(
-          //                 padding: const EdgeInsets.all(8.0),
-          //                 child: CachedNetworkImage(
-          //                   imageUrl: url,
-          //                   height: 80,
-          //                   width: 80,
-          //                   fit: BoxFit.cover,
-          //                   placeholder: (context, _) => const Center(
-          //                     child: CircularProgressIndicator(strokeWidth: 2),
-          //                   ),
-          //                   errorWidget: (context, _, __) =>
-          //                       const Icon(Icons.broken_image, size: 50),
-          //                 ),
-          //               );
-          //             }).toList(),
-          //           ),
-          //         ),
-          //         Divider(),            
+              //         //     return Row(
+              //         //       children: <Widget>[
+              //         //         Text("${e["vaccine"]} (${e["year"]})"),
+              //         //       ],
+              //         //     );
+              //         //   }).toList(),
+              //         // ),                                           
             
-          //         Text(
-          //           "Upload Image: ",
-          //           style: Theme.of(context).primaryTextTheme.labelMedium,
-          //         ),
+              //         ElevatedButton(
+              //           onPressed: () {
+              //             Navigator.of(context).push(
+              //               MaterialPageRoute(builder: (context) => PetMapScreen(),)
+              //             );                    
+              //           }, 
+              //           child: Text("Map"),
+              //         ),
             
-
+             
+                
+              //         Text(
+              //           "Images: ",
+              //           style: Theme.of(context).primaryTextTheme.labelMedium,
+              //         ),
+                              
+              //         SingleChildScrollView(
+              //           scrollDirection: Axis.horizontal,
+              //           child: Row(
+              //             children: petObject["media"].map<Widget>((url) {
+              //               return Padding(
+              //                 padding: const EdgeInsets.all(8.0),
+              //                 child: CachedNetworkImage(
+              //                   imageUrl: url,
+              //                   height: 80,
+              //                   width: 80,
+              //                   fit: BoxFit.cover,
+              //                   placeholder: (context, _) => const Center(
+              //                     child: CircularProgressIndicator(strokeWidth: 2),
+              //                   ),
+              //                   errorWidget: (context, _, __) =>
+              //                       const Icon(Icons.broken_image, size: 50),
+              //                 ),
+              //               );
+              //             }).toList(),
+              //           ),
+              //         ),
+              //         Divider(),            
+                
+              //         Text(
+              //           "Upload Image: ",
+              //           style: Theme.of(context).primaryTextTheme.labelMedium,
+              //         ),
+                
             
-          //         SizedBox(height: 40,),
-            
-          //         MultiImageUploader(
-          //           petId: widget.petId, // e.g. FirebaseAuth.instance.currentUser!.uid
-          //           onUploadComplete: (urls) {
-          //             print("Uploaded images:");
-          //             for (final url in urls) {
-          //               print(url);
-          //             }
-          //           },
-          //         ),
-                    
-          //     ],        
-          //   ),
-          // ),
-          body: SizedBox(
-            width: MediaQuery.of(context).size.width,
-            height: MediaQuery.of(context).size.height,
-            child: PageView(
-              scrollDirection: Axis.horizontal,
-              physics: BouncingScrollPhysics(),
-              controller: controller,
-              onPageChanged: _onPageChanged,
-              children:_widgetOptions,
-            ),
-          ),          
-          bottomNavigationBar: BottomNavigationBar(
-            items: const <BottomNavigationBarItem>[
-              BottomNavigationBarItem(icon: Icon(Icons.summarize), label: 'Overview',),
-              BottomNavigationBarItem(icon: Icon(Icons.photo), label: 'Media', ),
-              BottomNavigationBarItem(icon: Icon(Icons.query_stats), label: 'Questions', ),
-              // BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Location'),
-            ],
-            selectedItemColor: Colors.black,
-            unselectedItemColor: Colors.grey,
-            currentIndex: _selectedIndex,
-            // selectedItemColor: palette.text1,
-            onTap: _onItemTapped,
-            backgroundColor: Theme.of(context).bottomNavigationBarTheme.backgroundColor
-          ),
+                
+              //         SizedBox(height: 40,),
+                
+              //         MultiImageUploader(
+              //           petId: widget.petId, // e.g. FirebaseAuth.instance.currentUser!.uid
+              //           onUploadComplete: (urls) {
+              //             print("Uploaded images:");
+              //             for (final url in urls) {
+              //               print(url);
+              //             }
+              //           },
+              //         ),
+                        
+              //     ],        
+              //   ),
+              // ),
+              body: Builder(
+                builder: (context) {
+                  if (appState.isEditView) {
+                    return EditPetView(petObject: petObject);
+                  } else {
+                    return SizedBox(
+                      width: MediaQuery.of(context).size.width,
+                      height: MediaQuery.of(context).size.height,
+                      child: PageView(
+                        scrollDirection: Axis.horizontal,
+                        physics: BouncingScrollPhysics(),
+                        controller: controller,
+                        onPageChanged: _onPageChanged,
+                        children:_widgetOptions,
+                      ),
+                    );
+                  }
+                }
+              ),          
+              bottomNavigationBar: BottomNavigationBar(
+                items: const <BottomNavigationBarItem>[
+                  BottomNavigationBarItem(icon: Icon(Icons.summarize), label: 'Overview',),
+                  BottomNavigationBarItem(icon: Icon(Icons.photo), label: 'Media', ),
+                  BottomNavigationBarItem(icon: Icon(Icons.query_stats), label: 'Questions', ),
+                  // BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Location'),
+                ],
+                selectedItemColor: Colors.black,
+                unselectedItemColor: Colors.grey,
+                currentIndex: _selectedIndex,
+                // selectedItemColor: palette.text1,
+                onTap: _onItemTapped,
+                backgroundColor: Theme.of(context).bottomNavigationBarTheme.backgroundColor
+              ),
+            );
+          }
         );
       }
     );
   }
 
-  void _showMediaPicker(SettingsController settings) {
-    List<dynamic> petData = settings.petData.value;
-    Map<String,dynamic> petObject = petData.firstWhere((e)=>e["uid"]==widget.petId,orElse: ()=><String,dynamic>{});    
-    final mediaList = petObject["media"] as List<dynamic>;
-    if (mediaList.isEmpty) return;
+  // void _showMediaPicker(SettingsController settings) {
+  //   List<dynamic> petData = settings.petData.value;
+  //   Map<String,dynamic> petObject = petData.firstWhere((e)=>e["uid"]==widget.petId,orElse: ()=><String,dynamic>{});    
+  //   final mediaList = petObject["media"] as List<dynamic>;
+  //   if (mediaList.isEmpty) return;
 
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (_) => SafeArea(
-        child: SizedBox(
-          height: 150,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: mediaList.length,
-            itemBuilder: (context, index) {
-              final url = mediaList[index];
-              return GestureDetector(
-                onTap: () {
-                  // set the tapped image as the avatar
-                  setState(() {
-                    petImage = null; // clear local file
-                    petObject["displayUrl"] = url; // optional
-                    // selectedDisplayImageUrl = url;
+  //   showModalBottomSheet(
+  //     context: context,
+  //     shape: const RoundedRectangleBorder(
+  //       borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+  //     ),
+  //     builder: (_) => SafeArea(
+  //       child: SizedBox(
+  //         height: 150,
+  //         child: ListView.builder(
+  //           scrollDirection: Axis.horizontal,
+  //           itemCount: mediaList.length,
+  //           itemBuilder: (context, index) {
+  //             final url = mediaList[index];
+  //             return GestureDetector(
+  //               onTap: () {
+  //                 // set the tapped image as the avatar
+  //                 setState(() {
+  //                   petImage = null; // clear local file
+  //                   petObject["displayUrl"] = url; // optional
+  //                   // selectedDisplayImageUrl = url;
 
-                    FirestoreMethods().updatePetDisplayUrl(settings,widget.petId,url);
+  //                   FirestoreMethods().updatePetDisplayUrl(settings,widget.petId,url);
 
-                    print("selected: ${petObject["displayImage"]}");
-                  });
-                  Navigator.pop(context);
-                },
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: CachedNetworkImage(
-                      imageUrl: url,
-                      width: 100,
-                      height: 100,
-                      fit: BoxFit.cover,
-                      placeholder: (context, _) =>
-                          const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-                      errorWidget: (context, _, __) =>
-                          const Icon(Icons.broken_image),
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ),
-    );
-  }  
+  //                   print("selected: ${petObject["displayImage"]}");
+  //                 });
+  //                 Navigator.pop(context);
+  //               },
+  //               child: Padding(
+  //                 padding: const EdgeInsets.all(8.0),
+  //                 child: ClipRRect(
+  //                   borderRadius: BorderRadius.circular(8),
+  //                   child: CachedNetworkImage(
+  //                     imageUrl: url,
+  //                     width: 100,
+  //                     height: 100,
+  //                     fit: BoxFit.cover,
+  //                     placeholder: (context, _) =>
+  //                         const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+  //                     errorWidget: (context, _, __) =>
+  //                         const Icon(Icons.broken_image),
+  //                   ),
+  //                 ),
+  //               ),
+  //             );
+  //           },
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }  
 }
 

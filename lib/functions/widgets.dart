@@ -29,7 +29,7 @@ class Widgets {
               : Column(
                 children: vaccines.map((e) {
                   return Padding(
-                    padding: const EdgeInsets.only(left: 8.0),
+                    padding: const EdgeInsets.only(left: 0.0),
                     child: Row(
                       children: [
                         Text(
@@ -82,7 +82,7 @@ class Widgets {
                     contagious = "not contagious";
                   }                  
                   return Padding(
-                    padding: const EdgeInsets.only(left: 8.0),
+                    padding: const EdgeInsets.only(left: 0.0),
                     child: Row(
                       children: [
                           Text("${e["disease"]} ($contagious)",style: _textStyle,),

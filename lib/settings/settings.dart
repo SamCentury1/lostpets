@@ -48,6 +48,6 @@ class SettingsController {
   void setPetData(List<dynamic> value) {
     petData.value = value;
     _persistence.savePetData(petData.value);
-  }    
+  }
 
 }

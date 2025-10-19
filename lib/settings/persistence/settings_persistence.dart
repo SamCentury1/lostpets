@@ -9,6 +9,7 @@ abstract class SettingsPersistence {
   Future<List<dynamic>> getPetData();  
 
 
+
   /// ========== SAVE THE DATA ===================
   Future<void> saveDeviceSizeInfo(Object value);
   
@@ -16,5 +17,6 @@ abstract class SettingsPersistence {
 
   Future<void> saveUserData(Object value);
 
-  Future<void> savePetData(List<dynamic> value);  
+  Future<void> savePetData(List<dynamic> value);
+
 }

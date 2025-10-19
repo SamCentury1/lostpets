@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -15,7 +16,7 @@ class OverviewView extends StatefulWidget {
   final String petId;
   const OverviewView({
     super.key,
-    required this.petId
+    required this.petId,
   });
 
   @override
@@ -25,9 +26,12 @@ class OverviewView extends StatefulWidget {
 class _OverviewViewState extends State<OverviewView> {
 
 
+  late String _postalCode = "";
+
 
   final ImagePicker _picker = ImagePicker();
   File? petImage;
+
   Future<void> _pickImage(ImageSource source) async {
     final pickedFile = await _picker.pickImage(source: source, imageQuality: 80);
     if (pickedFile != null) {
@@ -35,13 +39,33 @@ class _OverviewViewState extends State<OverviewView> {
     }
   }
 
+  Future<void> loadPosition(Map<String,dynamic> petObject) async {
+    final GeoPoint location = petObject['location'];
+    final postalCode = await Helpers().getPostalCodeFromGeoPoint(location);
+    setState(() {
+      _postalCode = postalCode!;
+    });  
+  }
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    SettingsController _settings = Provider.of<SettingsController>(context, listen: false);
+    Map<String,dynamic> petObject = Helpers().getPetObject(_settings,widget.petId);   
+    loadPosition(petObject);
+
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<SettingsController>(
-      builder: (context,settings,child) {
+      builder: (context,settings,child)  {
 
         List<dynamic> petData = settings.petData.value;
         Map<String,dynamic> petObject = petData.firstWhere((e)=>e["uid"]==widget.petId,orElse: ()=><String,dynamic>{});
+        List<String> breedData = List<String>.from(petObject["breedData"]);
+
+  
 
         return SizedBox(
           height: MediaQuery.of(context).size.height,
@@ -102,11 +126,15 @@ class _OverviewViewState extends State<OverviewView> {
                               Divider(),
                               Widgets().petProfileAttributeRow("Species: ", petObject["species"],),
                               Divider(),
-                              Widgets().petProfileAttributeRow("Breed: ", petObject["breed"],),
+                              Widgets().petProfileAttributeRow("Breed: ", Helpers().displayBreedDataLabel(breedData),),
                               Divider(),
                               Widgets().petProfileAttributeRow("Sex: ", petObject["sex"],),
                               Divider(),
+                              Widgets().petProfileAttributeRow("Exterior: ", Helpers().displayAllowedOutside(petObject["allowedOutside"])),
+                              Divider(),
                               Widgets().petProfileAttributeRow("Age: ", "${Helpers().calculateAge(petObject["birthYear"]).toString()} years old",),
+                              Divider(),
+                              Widgets().petProfileAttributeRow("Area: ", _postalCode,),                              
                               Divider(),
                               Widgets().vaccinesWidget(context, petObject["vaccines"]),
                               Divider(),

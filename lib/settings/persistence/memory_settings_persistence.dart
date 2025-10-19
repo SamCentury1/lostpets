@@ -10,6 +10,7 @@ class MemoryOnlySettingsPersistence implements SettingsPersistence {
   String theme = 'default';
   Object userData = {};
   List<dynamic> petData = [];
+  bool isEditView = false;
 
 
   /// ============= GET ===================
@@ -23,7 +24,8 @@ class MemoryOnlySettingsPersistence implements SettingsPersistence {
   Future<Object> getUserData() async => userData;
 
   @override
-  Future<List<dynamic>> getPetData() async => petData;  
+  Future<List<dynamic>> getPetData() async => petData; 
+
 
 
   /// =========== SAVE ========================
@@ -39,6 +41,6 @@ class MemoryOnlySettingsPersistence implements SettingsPersistence {
   Future<void> saveDeviceSizeInfo(Object value) async => deviceSizeInfo = value;  
   
   @override
-  Future<void> savePetData(List<dynamic> value) async => petData = value;      
+  Future<void> savePetData(List<dynamic> value) async => petData = value;
 
 }

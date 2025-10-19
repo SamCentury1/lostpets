@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:tempoct2025/settings/settings.dart';
 
 class Helpers {
@@ -14,5 +16,61 @@ class Helpers {
     int currentYear = now.year;
     int age = currentYear-birthYear;
     return age;
+  }
+
+  Map<String,dynamic> getPetObject(SettingsController settings, String petId) {
+    // Map<String,dynamic> userData = settings.userData.value as Map<String,dynamic>;
+    List<dynamic> petData = settings.petData.value;    
+    Map<String,dynamic> petObject = petData.firstWhere((e)=>e["uid"]==petId,orElse: ()=><String,dynamic>{});
+    return petObject;
+
+  }
+
+
+  String displayBreedDataLabel(List<String> breedData) {
+    late String res = "";
+    if (breedData.isEmpty) {
+      res = "Unknown Breed";
+    } else {
+      if (breedData.length == 1) {
+        res = breedData[0];
+      } else {
+        res = "Mix ${breedData[0]} & ${breedData[1]}";
+      }
+    }
+    return res;
+  }
+
+  String displayAllowedOutside(bool allowedOutside) {
+    String res = "";
+    if (allowedOutside) {
+      res = "Allowed outside alone";
+    } else {
+      res = "Not allowed outside alone";
+    }
+    return res;
+  }
+
+
+
+  Future<String?> getPostalCodeFromGeoPoint(GeoPoint location) async {
+    try {
+
+      print("LOCATION: $location");
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+        location.latitude,
+        location.longitude,
+      );
+
+      if (placemarks.isNotEmpty) {
+        Placemark place = placemarks.first;
+        return "${place.locality}, ${place.postalCode}"; // ✅ Postal/ZIP code
+      } else {
+        return null;
+      }
+    } catch (e) {
+      print('Error getting postal code: $e');
+      return null;
+    }
   }  
 }

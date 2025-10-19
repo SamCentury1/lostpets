@@ -2,7 +2,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:provider/provider.dart';
+import 'package:tempoct2025/functions/helpers.dart';
 import 'package:tempoct2025/resources/firestore_methods.dart';
+import 'package:tempoct2025/settings/settings.dart';
 
 class MultiImageUploader extends StatefulWidget {
   final String petId;
@@ -25,6 +28,16 @@ class _MultiImageUploaderState extends State<MultiImageUploader> {
   List<XFile> _images = [];
   List<double> _uploadProgress = [];
   bool _isLoading = false;
+
+  late SettingsController _settings;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _settings = Provider.of<SettingsController>(context,listen: false);
+  }
+  
 
   Future<void> _pickImages() async {
     setState(() => _isLoading = true);
@@ -82,6 +95,15 @@ class _MultiImageUploaderState extends State<MultiImageUploader> {
     widget.onUploadComplete?.call(downloadUrls);
 
     setState(() => _isLoading = false);
+
+    setState(() {
+      List<dynamic> petData = _settings.petData.value;  
+      Map<String,dynamic> petObject = Helpers().getPetObject(_settings,widget.petId);
+      List<dynamic> media = petObject["media"];
+      media.addAll(downloadUrls);
+      petObject.update("media", (v)=>media);
+      _settings.setPetData(petData);
+    });
   }
 
 
@@ -104,6 +126,7 @@ class _MultiImageUploaderState extends State<MultiImageUploader> {
         if (_images.isNotEmpty)
           SizedBox(
             height: 150,
+            width: 400,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               itemCount: _images.length,
