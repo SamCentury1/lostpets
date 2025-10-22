@@ -22,7 +22,8 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final usernameController = TextEditingController();
+  final firstNameController = TextEditingController();
+  final lastNameController = TextEditingController();
   final emailController = TextEditingController();
   final password1Controller = TextEditingController();
   final password2Controller = TextEditingController();
@@ -42,7 +43,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       if (errors.isEmpty) {
 
-        await AuthService().registerUserManually(emailController.text, password1Controller.text,usernameController.text);
+        await AuthService().registerUserManually(emailController.text, password1Controller.text,firstNameController.text, lastNameController.text);
    
       } else {
         AuthService().showLoginFailedDialog(context, "Errors", errors);
@@ -84,7 +85,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 "Welcome!",
                               ),
                             
-                              LoginTextField(controller: usernameController, hintText: 'Username', obscureText: false,),
+                              LoginTextField(controller: firstNameController, hintText: 'First Name', obscureText: false,),
+
+                              LoginTextField(controller: lastNameController, hintText: 'Last Name', obscureText: false,),
                           
                               LoginTextField(controller: emailController, hintText: 'Email', obscureText: false,),
                             

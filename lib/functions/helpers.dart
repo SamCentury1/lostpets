@@ -64,7 +64,11 @@ class Helpers {
 
       if (placemarks.isNotEmpty) {
         Placemark place = placemarks.first;
-        return "${place.locality}, ${place.postalCode}"; // ✅ Postal/ZIP code
+        String? res = place.subLocality; 
+        if (place.subLocality == "") {
+          res = place.locality;
+        }
+        return res; // ✅ Postal/ZIP code
       } else {
         return null;
       }
@@ -73,4 +77,57 @@ class Helpers {
       return null;
     }
   }  
+
+  Future<String?> getAddressFromGeoPoint(GeoPoint location) async {
+    
+    try {
+      String? res = null;
+      print("LOCATION: $location");
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+        location.latitude,
+        location.longitude,
+      );
+
+      if (placemarks.isNotEmpty) {
+        Placemark place = placemarks.first;
+
+        print("""
+=================================
+      administrativeArea:     ${place.administrativeArea}
+      country:                ${place.country}
+      hashCode:               ${place.hashCode}
+      isoCountryCode:         ${place.isoCountryCode}
+      locality:               ${place.locality}
+      name:                   ${place.name}
+      postalCode:             ${place.postalCode}
+      street:                 ${place.street}
+      subAdministrativeArea:  ${place.subAdministrativeArea}
+      subLocality:            ${place.subLocality}
+      subThoroughfare:        ${place.subThoroughfare}
+      thoroughfare:           ${place.thoroughfare}
+      runtimeType:            ${place.runtimeType}
+=================================
+""");
+
+
+        // res = "${place.locality}, ${place.postalCode}"
+        return "${place.street}, ${place.locality} ${place.administrativeArea} ${place.postalCode}"; // ✅ Postal/ZIP code
+      } else {
+        return null;
+      }
+    } catch (e) {
+      print('Error getting postal code: $e');
+      return null;
+    }
+  }
+
+  void updatePetLocationToSettings(SettingsController settings, String petId, GeoPoint location) {
+    List<dynamic> petData = settings.petData.value;    
+    Map<String,dynamic> petObject = petData.firstWhere((e)=>e["uid"]==petId,orElse: ()=><String,dynamic>{});
+    petObject.update('location', (v) => location);
+    settings.setPetData(settings.petData.value);    
+
+  }
+
+  
 }

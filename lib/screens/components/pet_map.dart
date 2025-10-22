@@ -78,13 +78,19 @@ class _PetMapScreenState extends State<PetMapScreen> {
 
     // print("VIEW ALL PETS: ${pets[0]["location"].longitude}");
     setState(() {
-      _markers.addAll(pets.map((pet) => Marker(
-        markerId: MarkerId(pet["uid"]),
-        // position: LatLng(pet["latitude"], pet["longitude"]),
-        position: LatLng(pet["location"].latitude, pet["location"].longitude),
-        infoWindow: InfoWindow(title: pet["name"]),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
-      )));
+      _markers.addAll(
+        pets.map(
+          (pet) {
+            print("pet: $pet");
+            return Marker(
+              markerId: MarkerId(pet["uid"]),
+              // position: LatLng(pet["latitude"], pet["longitude"]),
+              position: LatLng(pet["location"]["latitude"], pet["location"]["longitude"]),
+              infoWindow: InfoWindow(title: pet["name"]),
+              icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+            );
+          }
+      ));
     });
   }
 
@@ -151,6 +157,7 @@ class _PetMapScreenState extends State<PetMapScreen> {
     //         ),
     // );
     return Scaffold(
+      appBar: AppBar(title: Text("Pet Map")),
       body: _mapStyle == null
         ? const Center(child: CircularProgressIndicator())
         : GoogleMap(

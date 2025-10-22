@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:tempoct2025/providers/palette_state.dart';
 import 'package:tempoct2025/resources/firestore_methods.dart';
 import 'package:tempoct2025/screens/components/pet_card_widget.dart';
+import 'package:tempoct2025/screens/home_screen/home_screen.dart';
 import 'package:tempoct2025/screens/new_pet_screen/new_pet_screen.dart';
 import 'package:tempoct2025/settings/settings.dart';
 
@@ -68,6 +69,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       return Scaffold(
         appBar: AppBar(
+          leading: IconButton(
+            onPressed: () {
+              Navigator.pushAndRemoveUntil<void>(
+                context,
+                MaterialPageRoute<void>(builder: (BuildContext context) => const HomeScreen()),
+                ModalRoute.withName('/home'),
+              );   
+            }, 
+            icon: Icon(Icons.arrow_back)
+          ),
           foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
           // leading: IconButton(
           //   onPressed: () => {

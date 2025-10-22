@@ -75,7 +75,7 @@ class _NewPetScreenState extends State<NewPetScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Add New Pet")),
-      body: EditPetView(petObject: null),
+      body: EditPetView(petId: null),
       // body: SingleChildScrollView(
       //   padding: const EdgeInsets.all(20),
       //   child: Column(

@@ -6,11 +6,13 @@ import 'package:firebase_storage/firebase_storage.dart';
 
 import 'package:flutter/material.dart';
 import 'package:tempoct2025/functions/helpers.dart';
+import 'package:tempoct2025/providers/app_state.dart';
 import 'package:tempoct2025/settings/settings.dart';
 
 class FirestoreMethods {
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseStorage _storage = FirebaseStorage.instance;
 
 
   Future<Map<String,dynamic>> getFirestoreDocument(String uid) async {
@@ -78,6 +80,16 @@ class FirestoreMethods {
     });
   }
 
+  Future<void> updatePetLocation(String petId, GeoPoint newLocation) async {
+    final docRef = FirebaseFirestore.instance.collection('pets').doc(petId);
+    try {
+      await docRef.update({'location': newLocation});
+    } catch (e,s) {
+      debugPrint("error updating location: $e | stacktrace: $s");
+    }
+
+  }
+
 
   Future<void> updatePetMedia( String petId, List<String> newUrls) async {
 
@@ -97,9 +109,7 @@ class FirestoreMethods {
 
 
 
-  Future<Map<String, dynamic>?> getUserData(
-    String uid,
-  ) async {
+  Future<Map<String, dynamic>?> getUserData(String uid,) async {
     late Map<String, dynamic>? res = {};
     try {
       final docRef = FirebaseFirestore.instance.collection('users').doc(uid);
@@ -113,6 +123,90 @@ class FirestoreMethods {
   }
 
 
+  Future<void> createPetObjectInDatabase(SettingsController settings, AppState appState, File? petImage) async {
+    try {
+      // final docRef = FirebaseFirestore.instance.collection('pets').doc(petId);
+
+      Map<String,dynamic> userData = settings.userData.value as Map<String,dynamic>;
+      List<dynamic> petData = settings.petData.value;
+      final userDoc = _firestore.collection("users").doc(userData["uid"]);
+      List<dynamic> userPets = userData["pets"];
+
+      final petsRef = _firestore.collection("pets");
+      final docRef = petsRef.doc();
+      final String uid = docRef.id;
+
+
+
+      if (petImage!=null) {
+
+        final ref = _storage
+            .ref()
+            .child('user_uploads/$uid/${DateTime.now().millisecondsSinceEpoch}');
+
+        final uploadTask = ref.putFile(petImage);
+
+        final snapshot = await uploadTask.whenComplete(() {});
+        final downloadUrl = await snapshot.ref.getDownloadURL();
+
+
+        if (downloadUrl != "") {
+          appState.newPetObject.update("media", (v) => [downloadUrl]);
+          appState.newPetObject.update("displayUrl", (v)=> downloadUrl);
+        }
+      }
+
+      appState.newPetObject.update("uid", (v)=>uid);
+      appState.newPetObject.update("guardians", (v)=>[userData["uid"]]);
+      userPets.add(uid);
+      petData.add(appState.newPetObject);
+
+
+      await docRef.set(appState.newPetObject);
+      await userDoc.update({"pets": userPets});
+
+      settings.setUserData(settings.userData.value);
+      settings.setPetData(settings.petData.value);
+
+
+
+      appState.newPetObject.forEach((k,v) {
+        print("key: $k | value: $v");
+      });
+      print("in updatePetObjectInDatabase: ${appState.newPetObject}");
+      // docRef.update({"data"})
+      
+    } catch (e,s) {
+      debugPrint("error updating pet object: $e | stacktrace: $s");
+    }
+  }
+
+
+  Future<void> updatePetObjectInDatabase(SettingsController settings, String petId, AppState appState) async {
+    try {
+
+      // Map<String,dynamic> userData = settings.userData.value as Map<String,dynamic>;
+      List<dynamic> petData = settings.petData.value;
+      Map<String,dynamic> petObject = petData.firstWhere((e)=>e["uid"]==petId,orElse: ()=><String,dynamic>{});
+
+      petObject = appState.newPetObject;
+      settings.setPetData(petData);
+
+      final docRef = FirebaseFirestore.instance.collection('pets').doc(petId);
+
+      // appState.newPetObject.forEach((k,v) {
+      //   print("key: $k | value: $v");
+      // });
+      // print("in updatePetObjectInDatabase: ${appState.newPetObject}");
+      docRef.update(appState.newPetObject);
+
+
+      
+    } catch (e,s) {
+      debugPrint("error updating pet object: $e | stacktrace: $s");
+    }
+  }
+
   Future<void> saveUserToDatabase(Map<String,dynamic> userData) async {
     late String os = "";
     if (Platform.isAndroid) {
@@ -124,11 +218,13 @@ class FirestoreMethods {
     final String uid = userData["uid"];
     final String email = userData["email"];
     final String providerData = userData["providerData"];
+    final String fName = userData["firstName"];
+    final String lName = userData["lastName"];
 
     final Map<String,dynamic> userDocument = {
       "uid": uid,
-      "firstName": "",
-      "lastName": "",
+      "firstName": fName,
+      "lastName": lName,
       "email": email,
       "phoneNumber": "",
       "parameters" : {
@@ -184,10 +280,12 @@ class FirestoreMethods {
     return snapshot.docs.map((doc) {
       final geo = doc['location'] as GeoPoint;
       return {
-        "id": doc.id,
+        "uid": doc.id,
         "name": doc['name'] ?? '',
-        "latitude": geo.latitude,
-        "longitude": geo.longitude,
+        "location": {"longitude":geo.longitude,"latitude":geo.latitude},
+        "displayUrl": doc["displayUrl"]
+        // "latitude": geo.latitude,
+        // "longitude": geo.longitude,
       };
     }).toList();
   }

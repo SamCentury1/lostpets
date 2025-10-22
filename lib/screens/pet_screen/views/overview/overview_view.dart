@@ -7,7 +7,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:tempoct2025/functions/helpers.dart';
 import 'package:tempoct2025/functions/widgets.dart';
+import 'package:tempoct2025/providers/app_state.dart';
 import 'package:tempoct2025/resources/firestore_methods.dart';
+import 'package:tempoct2025/screens/components/edit_pet_view.dart';
 import 'package:tempoct2025/screens/components/multi_image_picker.dart';
 import 'package:tempoct2025/screens/components/pet_map.dart';
 import 'package:tempoct2025/settings/settings.dart';
@@ -65,189 +67,178 @@ class _OverviewViewState extends State<OverviewView> {
         Map<String,dynamic> petObject = petData.firstWhere((e)=>e["uid"]==widget.petId,orElse: ()=><String,dynamic>{});
         List<String> breedData = List<String>.from(petObject["breedData"]);
 
-  
 
-        return SizedBox(
-          height: MediaQuery.of(context).size.height,
-          child: SingleChildScrollView(
-              child: Column(
-                children: [
+        return Consumer<AppState>(
+          builder: (context,appState,child) {
+
+            if (appState.isEditView) {
+              return EditPetView(petId: petObject["uid"]);
+            } else {
+              return SizedBox(
+                height: MediaQuery.of(context).size.height,
+                child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                    
+                          SizedBox(height: 40,),
+                          // 🐶 Pet Avatar
+                          Center(
+                            child: Center(
+                              child: Stack(
+                                children: [
+                            
+                                  CircleAvatar(
+                                    radius: 60,
+                                    backgroundColor: Colors.grey.shade200,
+                                    backgroundImage: petObject["displayUrl"] != ""
+                                        ? NetworkImage(petObject["displayUrl"]!) as ImageProvider // keep if you have local file
+                                        : null,
+                                    child: (petImage == null && petObject["media"].isEmpty)
+                                        ? const Icon(Icons.pets, size: 50, color: Colors.grey)
+                                        : null,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 24),
               
-                    SizedBox(height: 40,),
-                    // 🐶 Pet Avatar
-                    Center(
-                      child: GestureDetector(
-                        onTap: () => _showMediaPicker(settings),
-                        child: Center(
-                          child: Stack(
-                            children: [
-                        
-                              CircleAvatar(
-                                radius: 60,
-                                backgroundColor: Colors.grey.shade200,
-                                backgroundImage: petObject["displayUrl"] != ""
-                                    ? NetworkImage(petObject["displayUrl"]!) as ImageProvider // keep if you have local file
-                                    : null,
-                                child: (petImage == null && petObject["media"].isEmpty)
-                                    ? const Icon(Icons.pets, size: 50, color: Colors.grey)
-                                    : null,
-                              ),                      
-                              Positioned(
-                                bottom: 0,
-                                right: 4,
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(context).colorScheme.primary,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  padding: const EdgeInsets.all(6),
-                                  child: const Icon(
-                                    Icons.camera_alt,
-                                    color: Colors.white,
-                                    size: 20,
-                                  ),
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Card(
+                              child: Padding(
+                                padding: EdgeInsets.all(4.0),
+                                child: Column(
+                                  children: [
+                                    Widgets().petProfileAttributeRow("Name: ", petObject["name"],),
+                                    Divider(),
+                                    Widgets().petProfileAttributeRow("Species: ", petObject["species"],),
+                                    Divider(),
+                                    Widgets().petProfileAttributeRow("Breed: ", Helpers().displayBreedDataLabel(breedData),),
+                                    Divider(),
+                                    Widgets().petProfileAttributeRow("Sex: ", petObject["sex"],),
+                                    Divider(),
+                                    Widgets().petProfileAttributeRow("Exterior: ", Helpers().displayAllowedOutside(petObject["allowedOutside"])),
+                                    Divider(),
+                                    Widgets().petProfileAttributeRow("Age: ", "${Helpers().calculateAge(petObject["birthYear"]).toString()} years old",),
+                                    Divider(),
+                                    Widgets().petProfileAttributeRow("Area: ", _postalCode,),                              
+                                    Divider(),
+                                    Widgets().vaccinesWidget(context, petObject["vaccines"]),
+                                    Divider(),
+                                    Widgets().diseasesWidget(context, petObject["diseases"]),                            
+                                  ],
                                 ),
                               ),
-                            ],
+                            ),
                           ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Card(
-                        child: Padding(
-                          padding: EdgeInsets.all(4.0),
-                          child: Column(
-                            children: [
-                              Widgets().petProfileAttributeRow("Name: ", petObject["name"],),
-                              Divider(),
-                              Widgets().petProfileAttributeRow("Species: ", petObject["species"],),
-                              Divider(),
-                              Widgets().petProfileAttributeRow("Breed: ", Helpers().displayBreedDataLabel(breedData),),
-                              Divider(),
-                              Widgets().petProfileAttributeRow("Sex: ", petObject["sex"],),
-                              Divider(),
-                              Widgets().petProfileAttributeRow("Exterior: ", Helpers().displayAllowedOutside(petObject["allowedOutside"])),
-                              Divider(),
-                              Widgets().petProfileAttributeRow("Age: ", "${Helpers().calculateAge(petObject["birthYear"]).toString()} years old",),
-                              Divider(),
-                              Widgets().petProfileAttributeRow("Area: ", _postalCode,),                              
-                              Divider(),
-                              Widgets().vaccinesWidget(context, petObject["vaccines"]),
-                              Divider(),
-                              Widgets().diseasesWidget(context, petObject["diseases"]),                            
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(builder: (context) => PetMapScreen(petObject: petObject,))
-                          );                      
-                        }, 
-                        style: ElevatedButton.styleFrom(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadiusGeometry.all(Radius.circular(12.0))
-                          )
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(Icons.location_on,size: 22.0,),
-                            SizedBox(width: 20.0,),
-                            Text(
-                              "View on Map",
-                              style: TextStyle(
-                                fontSize: 22.0
+              
+                          Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(builder: (context) => PetMapScreen(petObject: petObject,))
+                                );                      
+                              }, 
+                              style: ElevatedButton.styleFrom(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadiusGeometry.all(Radius.circular(12.0))
+                                )
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.location_on,size: 22.0,),
+                                  SizedBox(width: 20.0,),
+                                  Text(
+                                    "View on Map",
+                                    style: TextStyle(
+                                      fontSize: 22.0
+                                    )
+                                  ),
+                                ],
                               )
                             ),
-                          ],
-                        )
-                      ),
-                    )
-
+                          )
               
-
-                    // Text(
-                    //   "Vaccines",
-                    //   style: Theme.of(context).primaryTextTheme.bodyLarge,
-                    // ),     
-                    // Padding(
-                    //   padding: EdgeInsets.symmetric(horizontal: 12.0),
-                    //   child: Widgets().vaccinesWidget(context, petObject["vaccines"]),
-                    // ),
-
-
-                                        
-
-                    // ElevatedButton(
-                    //   onPressed: () {
-                    //     Navigator.of(context).push(
-                    //       MaterialPageRoute(builder: (context) => PetMapScreen(),)
-                    //     );                    
-                    //   }, 
-                    //   child: Text("Map"),
-                    // ),
-                      
-                       
+                    
               
-                    // Text(
-                    //   "Images: ",
-                    //   style: Theme.of(context).primaryTextTheme.labelMedium,
-                    // ),
+                          // Text(
+                          //   "Vaccines",
+                          //   style: Theme.of(context).primaryTextTheme.bodyLarge,
+                          // ),     
+                          // Padding(
+                          //   padding: EdgeInsets.symmetric(horizontal: 12.0),
+                          //   child: Widgets().vaccinesWidget(context, petObject["vaccines"]),
+                          // ),
+              
+              
+                                              
+              
+                          // ElevatedButton(
+                          //   onPressed: () {
+                          //     Navigator.of(context).push(
+                          //       MaterialPageRoute(builder: (context) => PetMapScreen(),)
+                          //     );                    
+                          //   }, 
+                          //   child: Text("Map"),
+                          // ),
                             
-                    // SingleChildScrollView(
-                    //   scrollDirection: Axis.horizontal,
-                    //   child: Row(
-                    //     children: petObject["media"].map<Widget>((url) {
-                    //       return Padding(
-                    //         padding: const EdgeInsets.all(8.0),
-                    //         child: CachedNetworkImage(
-                    //           imageUrl: url,
-                    //           height: 80,
-                    //           width: 80,
-                    //           fit: BoxFit.cover,
-                    //           placeholder: (context, _) => const Center(
-                    //             child: CircularProgressIndicator(strokeWidth: 2),
-                    //           ),
-                    //           errorWidget: (context, _, __) =>
-                    //               const Icon(Icons.broken_image, size: 50),
-                    //         ),
-                    //       );
-                    //     }).toList(),
-                    //   ),
-                    // ),
-                    // Divider(),            
-              
-                    // Text(
-                    //   "Upload Image: ",
-                    //   style: Theme.of(context).primaryTextTheme.labelMedium,
-                    // ),
-              
-              
-              
-                    // SizedBox(height: 40,),
-              
-                    // MultiImageUploader(
-                    //   petId: widget.petId, // e.g. FirebaseAuth.instance.currentUser!.uid
-                    //   onUploadComplete: (urls) {
-                    //     print("Uploaded images:");
-                    //     for (final url in urls) {
-                    //       print(url);
-                    //     }
-                    //   },
-                    // ),
-                      
-                ],        
-              ),
-          ),
+                            
+                    
+                          // Text(
+                          //   "Images: ",
+                          //   style: Theme.of(context).primaryTextTheme.labelMedium,
+                          // ),
+                                  
+                          // SingleChildScrollView(
+                          //   scrollDirection: Axis.horizontal,
+                          //   child: Row(
+                          //     children: petObject["media"].map<Widget>((url) {
+                          //       return Padding(
+                          //         padding: const EdgeInsets.all(8.0),
+                          //         child: CachedNetworkImage(
+                          //           imageUrl: url,
+                          //           height: 80,
+                          //           width: 80,
+                          //           fit: BoxFit.cover,
+                          //           placeholder: (context, _) => const Center(
+                          //             child: CircularProgressIndicator(strokeWidth: 2),
+                          //           ),
+                          //           errorWidget: (context, _, __) =>
+                          //               const Icon(Icons.broken_image, size: 50),
+                          //         ),
+                          //       );
+                          //     }).toList(),
+                          //   ),
+                          // ),
+                          // Divider(),            
+                    
+                          // Text(
+                          //   "Upload Image: ",
+                          //   style: Theme.of(context).primaryTextTheme.labelMedium,
+                          // ),
+                    
+                    
+                    
+                          // SizedBox(height: 40,),
+                    
+                          // MultiImageUploader(
+                          //   petId: widget.petId, // e.g. FirebaseAuth.instance.currentUser!.uid
+                          //   onUploadComplete: (urls) {
+                          //     print("Uploaded images:");
+                          //     for (final url in urls) {
+                          //       print(url);
+                          //     }
+                          //   },
+                          // ),
+                            
+                      ],        
+                    ),
+                ),
+              );
+            }
+          }
         );
       }
     );

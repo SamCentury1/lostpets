@@ -17,7 +17,7 @@ class AuthService {
 
 
 
-  Future<void> registerUserManually(String email, String password, String username) async {
+  Future<void> registerUserManually(String email, String password, String fName, String lName) async {
     UserCredential cred = await FirebaseAuth.instance.createUserWithEmailAndPassword(
       email: email, 
       password: password
@@ -31,6 +31,8 @@ class AuthService {
           "uid":uid,
           "email": userEmail,
           "providerData": providerData,
+          "firstName": fName,
+          "lastName": lName,
         };      
       FirestoreMethods().saveUserToDatabase(userData);
     }    

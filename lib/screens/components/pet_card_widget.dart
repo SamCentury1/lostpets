@@ -27,15 +27,29 @@ class _PetCardWidgetState extends State<PetCardWidget> {
     return age;
   }
 
-  String getSexSpeciesBreedText(String sex, String species, String breed) {
+  // String getSexSpeciesBreedText(String sex, String species, String breed) {
+  //   String res = "";
+  //   if (breed=="unknown") {
+  //     res = "$sex $species - unknown breed";
+  //   } else {
+  //     res = "$sex $species $breed";
+  //   }
+  //   return res;
+  // }
+
+
+  String getSexSpeciesBreedText(String sex, String species, List<dynamic> breedData) {
     String res = "";
-    if (breed=="unknown") {
+    if (breedData.isEmpty) {
       res = "$sex $species - unknown breed";
-    } else {
-      res = "$sex $species $breed";
+    } else if (breedData.length == 1) {
+      res = "$sex $species ${breedData[0]}";
+    } else if (breedData.length == 2) {
+      res = "$sex $species ${breedData[0]} & ${breedData[0]} mix";
     }
     return res;
   }
+
 
   String getVaccinesText(List<dynamic> vaccines) {
     String res = "";
@@ -91,7 +105,7 @@ class _PetCardWidgetState extends State<PetCardWidget> {
         List<dynamic> petData = settings.petData.value;
         Map<String,dynamic> petObject = petData.firstWhere((e)=>e["uid"]==widget.petId,orElse: ()=><String,dynamic>{});
         String petName = petObject["name"];
-        String petSexSpeciesBreedText = getSexSpeciesBreedText(petObject["sex"],petObject["species"],petObject["breed"]);
+        String petSexSpeciesBreedText = getSexSpeciesBreedText(petObject["sex"],petObject["species"],petObject["breedData"]);
         String petSex = petObject["sex"];
         int petAge = calculateAge(petObject["birthYear"]);
         String vaccines = getVaccinesText(petObject["vaccines"]);
