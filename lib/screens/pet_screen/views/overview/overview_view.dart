@@ -12,6 +12,7 @@ import 'package:tempoct2025/resources/firestore_methods.dart';
 import 'package:tempoct2025/screens/components/edit_pet_view.dart';
 import 'package:tempoct2025/screens/components/multi_image_picker.dart';
 import 'package:tempoct2025/screens/components/pet_map.dart';
+import 'package:tempoct2025/screens/new_posting_screen/new_posting_screen.dart';
 import 'package:tempoct2025/settings/settings.dart';
 
 class OverviewView extends StatefulWidget {
@@ -48,12 +49,20 @@ class _OverviewViewState extends State<OverviewView> {
       _postalCode = postalCode!;
     });  
   }
+
+  late bool isOwner = false;
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     SettingsController _settings = Provider.of<SettingsController>(context, listen: false);
+    Map<String,dynamic> userData = _settings.userData.value as Map<String,dynamic>;
     Map<String,dynamic> petObject = Helpers().getPetObject(_settings,widget.petId);   
+    if (petObject["guardians"].contains(userData["uid"])) {
+      setState(() {
+        isOwner = true;
+      });
+    }
     loadPosition(petObject);
 
   }
@@ -159,9 +168,41 @@ class _OverviewViewState extends State<OverviewView> {
                                 ],
                               )
                             ),
-                          )
+                          ),
               
-                    
+                          isOwner ? 
+                          Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(builder: (context) => NewPostingScreen(petId: widget.petId,))
+                                );                      
+                              }, 
+                              style: ElevatedButton.styleFrom(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadiusGeometry.all(Radius.circular(12.0)),
+                                ),
+                                minimumSize: Size(300,100),
+                                backgroundColor: Colors.redAccent
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  Icon(Icons.warning,size: 30.0,),
+                                  SizedBox(width: 20.0,),
+                                  Text(
+                                    "Post Lost Pet",
+                                    style: TextStyle(
+                                      fontSize: 30.0
+                                    )
+                                  ),
+                                  SizedBox(width: 20.0,),                                  
+                                  Icon(Icons.warning,size: 30.0,),
+                                ],
+                              )
+                            ),
+                          ) : SizedBox()
               
                           // Text(
                           //   "Vaccines",

@@ -1,4 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+
+
+import 'dart:ui' as ui;
+import 'dart:typed_data';
+import 'package:http/http.dart' as http;
+
 
 class Widgets {
   Widget vaccinesWidget(BuildContext context, List<dynamic> vaccines,) {
@@ -129,7 +136,30 @@ class Widgets {
       ),
     );   
 
-  } 
+  }
+  Future<BitmapDescriptor> createCircularMarker(String imageUrl, {int size = 100}) async {
+    final response = await http.get(Uri.parse(imageUrl));
+    final Uint8List imageData = response.bodyBytes;
+
+    final ui.Codec codec = await ui.instantiateImageCodec(imageData, targetWidth: size);
+    final ui.FrameInfo frameInfo = await codec.getNextFrame();
+
+    final ui.PictureRecorder recorder = ui.PictureRecorder();
+    final Canvas canvas = Canvas(recorder);
+    final Paint paint = Paint()..isAntiAlias = true;
+
+    final double radius = size / 2.0;
+    final Rect rect = Rect.fromCircle(center: Offset(radius, radius), radius: radius);
+
+    canvas.clipPath(Path()..addOval(rect));
+    canvas.drawImageRect(frameInfo.image, Rect.fromLTWH(0, 0, frameInfo.image.width.toDouble(), frameInfo.image.height.toDouble()), rect, paint);
+
+    final ui.Image circularImage = await recorder
+        .endRecording()
+        .toImage(size, size);
+    final ByteData? byteData = await circularImage.toByteData(format: ui.ImageByteFormat.png);
+    return BitmapDescriptor.fromBytes(byteData!.buffer.asUint8List());
+  }
 
   
 }

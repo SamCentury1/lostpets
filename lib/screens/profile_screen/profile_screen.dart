@@ -66,6 +66,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     builder: (context,settings,child) {
 
       petData = settings.petData.value as List<Map<String,dynamic>>;
+      Map<String,dynamic> userData = settings.userData.value as Map<String,dynamic>;
 
       return Scaffold(
         appBar: AppBar(
@@ -98,7 +99,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Card(
                 color: Theme.of(context).cardColor,
                 child: ListTile(
-                  title: Text("Welcome Sam!"),
+                  title: Text("Welcome ${userData["firstName"]}!"),
                 ),
               ),
               SizedBox(height: 50,),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:tempoct2025/functions/widgets.dart';
 import 'package:tempoct2025/resources/firestore_methods.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:geolocator/geolocator.dart';
@@ -52,9 +53,6 @@ class _PetMapScreenState extends State<PetMapScreen> {
     super.initState();
     _ensureLocationPermission();
     loadPets();
-    // rootBundle.loadString('assets/map_style.json').then((style) {
-    //   _mapStyle = style;
-    // });
     _loadMapStyle();
   }
 
@@ -75,40 +73,27 @@ class _PetMapScreenState extends State<PetMapScreen> {
     } else {
       pets = await FirestoreMethods().fetchPetLocations();
     }
+    
+    Set<Marker> markers = {};
 
-    // print("VIEW ALL PETS: ${pets[0]["location"].longitude}");
-    setState(() {
-      _markers.addAll(
-        pets.map(
-          (pet) {
-            print("pet: $pet");
-            return Marker(
-              markerId: MarkerId(pet["uid"]),
-              // position: LatLng(pet["latitude"], pet["longitude"]),
-              position: LatLng(pet["location"]["latitude"], pet["location"]["longitude"]),
-              infoWindow: InfoWindow(title: pet["name"]),
-              icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
-            );
-          }
-      ));
-    });
+    for (final pet in pets) {
+      final icon = await Widgets().createCircularMarker(pet["displayUrl"], size: 120);
+      markers.add(
+        Marker(
+          markerId: MarkerId(pet["uid"]),
+          position: LatLng(
+            pet["location"]["latitude"],
+            pet["location"]["longitude"],
+          ),
+          icon: icon,
+          onTap: () => _showPetDetails(context, pet),
+        ),
+      );    
+    }
+    setState(() => _markers.addAll(markers));
   }
 
 
-  // Future<void> _goToUserLocation(GoogleMapController controller) async {
-  //   final position = await Geolocator.getCurrentPosition(
-  //     desiredAccuracy: LocationAccuracy.high,
-  //   );
-
-  //   controller.animateCamera(
-  //     CameraUpdate.newCameraPosition(
-  //       CameraPosition(
-  //         target: LatLng(position.latitude, position.longitude),
-  //         zoom: 15,
-  //       ),
-  //     ),
-  //   );
-  // }
 
   Future<void> _goToLocation(Map<String,dynamic>? petObject, GoogleMapController controller) async {
 
@@ -136,49 +121,95 @@ class _PetMapScreenState extends State<PetMapScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // return Scaffold(
-
-    //   body: _mapStyle == null
-    //       ? const Center(child: CircularProgressIndicator())
-    //       : GoogleMap(
-    //         onMapCreated: (controller) => _controller = controller,
-    //           style: _mapStyle, // 👈 NEW way to apply style
-    //           initialCameraPosition: const CameraPosition(
-    //             target: LatLng(45.510, -73.679),
-    //             zoom: 11,
-    //           ),
-    //           markers: _markers,
-    //           myLocationEnabled: true,
-    //           zoomControlsEnabled: true,
-    //           zoomGesturesEnabled: true,
-    //           scrollGesturesEnabled: true,
-    //           rotateGesturesEnabled: true,
-    //           tiltGesturesEnabled: true,
-    //         ),
-    // );
-    return Scaffold(
-      appBar: AppBar(title: Text("Pet Map")),
-      body: _mapStyle == null
-        ? const Center(child: CircularProgressIndicator())
-        : GoogleMap(
-            onMapCreated: (controller) {
-              _controller = controller;
-              _goToLocation(widget.petObject, controller);
-            } ,
-            style: _mapStyle, // 👈 NEW way to apply style
-            initialCameraPosition: const CameraPosition(
-              target: LatLng(45.510, -73.679),
-              zoom: 11,
-            ),
-            markers: _markers,
-            myLocationEnabled: true,
-            zoomControlsEnabled: true,
-            zoomGesturesEnabled: true,
-            scrollGesturesEnabled: true,
-            rotateGesturesEnabled: true,
-            tiltGesturesEnabled: true,
-            myLocationButtonEnabled: true,            
-          ),
+    return Builder(
+      builder: (context) {
+        // return Scaffold(
+          // appBar: AppBar(title: Text("Pet Map")),
+          if (_mapStyle == null) {
+            return Center(child: CircularProgressIndicator());
+          } else {
+              return GoogleMap(
+                onMapCreated: (controller) {
+                  _controller = controller;
+                  _goToLocation(widget.petObject, controller);
+                } ,
+                style: _mapStyle, // 👈 NEW way to apply style
+                initialCameraPosition: const CameraPosition(
+                  target: LatLng(45.510, -73.679),
+                  zoom: 11,
+                ),
+                markers: _markers,
+                myLocationEnabled: true,
+                zoomControlsEnabled: true,
+                zoomGesturesEnabled: true,
+                scrollGesturesEnabled: true,
+                rotateGesturesEnabled: true,
+                tiltGesturesEnabled: true,
+                myLocationButtonEnabled: true,            
+              );            
+          }
+          // body: _mapStyle == null
+          //   ? const Center(child: CircularProgressIndicator())
+          //   : GoogleMap(
+          //       onMapCreated: (controller) {
+          //         _controller = controller;
+          //         _goToLocation(widget.petObject, controller);
+          //       } ,
+          //       style: _mapStyle, // 👈 NEW way to apply style
+          //       initialCameraPosition: const CameraPosition(
+          //         target: LatLng(45.510, -73.679),
+          //         zoom: 11,
+          //       ),
+          //       markers: _markers,
+          //       myLocationEnabled: true,
+          //       zoomControlsEnabled: true,
+          //       zoomGesturesEnabled: true,
+          //       scrollGesturesEnabled: true,
+          //       rotateGesturesEnabled: true,
+          //       tiltGesturesEnabled: true,
+          //       myLocationButtonEnabled: true,            
+          //     ),
+        // );
+      }
     );
   }
+}
+
+void _showPetDetails(BuildContext context, Map<String, dynamic> pet) {
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: Colors.white,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (context) {
+      return Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Image.network(
+                pet["displayUrl"],
+                height: 300,
+                width: 400,
+                fit: BoxFit.cover,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              pet["name"] ?? "Unknown Pet",
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            if (pet["description"] != null) ...[
+              const SizedBox(height: 8),
+              Text(pet["description"]),
+            ],
+            const SizedBox(height: 16),
+          ],
+        ),
+      );
+    },
+  );
 }
