@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:tempoct2025/functions/helpers.dart';
 import 'package:tempoct2025/providers/app_state.dart';
 import 'package:tempoct2025/settings/settings.dart';
@@ -274,20 +275,53 @@ class FirestoreMethods {
   }
 
 
-  Future<List<Map<String,dynamic>>> fetchPetLocations() async {
-    final snapshot = await FirebaseFirestore.instance.collection('pets').get();
-    
-    return snapshot.docs.map((doc) {
-      final geo = doc['location'] as GeoPoint;
-      return {
-        "uid": doc.id,
-        "name": doc['name'] ?? '',
-        "location": {"longitude":geo.longitude,"latitude":geo.latitude},
-        "displayUrl": doc["displayUrl"]
-        // "latitude": geo.latitude,
-        // "longitude": geo.longitude,
-      };
-    }).toList();
+  Future<List<Map<String,dynamic>>> fetchLostPetLocations() async {
+    final snapshot = await _firestore.collection('postings').get();
+    print("postings: ${snapshot.docs.length}");
+
+    try {
+      List<Map<String,dynamic>> res = [];
+      for (int i=0; i<snapshot.docs.length; i++) {
+        final doc = snapshot.docs[i];
+        if (doc['location'] != null) {
+          final geo = doc['location'] as GeoPoint;
+          Map<String,dynamic> obj = {
+            "postingId": doc.id,
+            "uid": doc["petId"],
+            "name": doc['name'] ?? '',
+            "missingSince": doc["missingSince"],
+            "description": doc["description"],
+            // "location": {"longitude":geo.longitude,"latitude":geo.latitude},
+            "location": LatLng(geo.latitude,geo.longitude),
+            "displayUrl": doc["displayUrl"]
+            // "latitude": geo.latitude,
+            // "longitude": geo.longitude,
+          };
+          res.add(obj);
+        } 
+      }
+      return res;
+      // return snapshot.docs.map((doc) {
+
+      //   Map<String,dynamic> res = {};
+      //   if (doc['location'] != null) {
+      //     final geo = doc['location'] as GeoPoint;
+      //     res = {
+      //       "uid": doc.id,
+      //       "name": doc['name'] ?? '',
+      //       "location": {"longitude":geo.longitude,"latitude":geo.latitude},
+      //       "displayUrl": doc["displayUrl"]
+      //       // "latitude": geo.latitude,
+      //       // "longitude": geo.longitude,
+      //     };
+      //   } 
+      //   return res;
+
+      // }).toList();
+    } catch (e,s) {
+      debugPrint("error: $e | stacktrace: $s");
+      return [];
+    }
   }
 
 
@@ -296,8 +330,18 @@ class FirestoreMethods {
     final data = doc.data();
     if (data == null || data['imageUrls'] == null) return [];
     return List<String>.from(data['imageUrls']);
-  }    
+  }
 
+
+  Future<void> createPosting(AppState appState,) async {
+    try {
+      final petDocRef = await _firestore.collection("pets").doc(appState.newPostingData["petId"]);
+      await petDocRef.update({"isLost": true});
+      await _firestore.collection("postings").doc().set(appState.newPostingData);     
+    } catch (e,s) {
+      debugPrint("error: $e | stacktrace: $s");
+    }
+  }
 
 
 

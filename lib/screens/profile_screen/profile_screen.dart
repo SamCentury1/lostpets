@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tempoct2025/providers/palette_state.dart';
 import 'package:tempoct2025/resources/firestore_methods.dart';
+import 'package:tempoct2025/screens/authentication/auth_screen.dart';
 import 'package:tempoct2025/screens/components/pet_card_widget.dart';
 import 'package:tempoct2025/screens/home_screen/home_screen.dart';
 import 'package:tempoct2025/screens/new_pet_screen/new_pet_screen.dart';
@@ -74,7 +75,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onPressed: () {
               Navigator.pushAndRemoveUntil<void>(
                 context,
-                MaterialPageRoute<void>(builder: (BuildContext context) => const HomeScreen()),
+                MaterialPageRoute<void>(builder: (BuildContext context) => const AuthScreen()),
                 ModalRoute.withName('/home'),
               );   
             }, 
@@ -103,6 +104,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               SizedBox(height: 50,),
+              
           
               Padding(
                 padding: const EdgeInsets.all(8.0),

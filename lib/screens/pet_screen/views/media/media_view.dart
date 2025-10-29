@@ -59,7 +59,54 @@ class _MediaViewState extends State<MediaView> with AutomaticKeepAliveClientMixi
                         //       print(url);
                         //     }
                         //   },
-                        // ),                             
+                        // ),
+                        //
+                        SizedBox(height: 30,),
+                        Builder(
+                          builder: (context)  {
+                            if (appState.isEditView) {
+                              return Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Column(
+                                  children: [
+                                    Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: Text("Edit Media",style: Theme.of(context).primaryTextTheme.bodyLarge,),
+                                    ),
+                                    SizedBox(height: 15,),    
+
+                                    Card(
+                                      color: Theme.of(context).cardColor,
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Align(
+                                          alignment: Alignment.centerLeft,
+                                          child: Text(
+                                            "Remove media by pressing on it for one second, then tapping 'Remove' on the bar that appears at the bottom of the screen",
+                                            style: Theme.of(context).primaryTextTheme.bodySmall,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(height: 15,),                                   
+                                    MultiImageUploader(
+                                      petId: widget.petId, // e.g. FirebaseAuth.instance.currentUser!.uid
+                                      onUploadComplete: (urls) {
+                                        print("Uploaded images:");
+                                        for (final url in urls) {
+                                          print(url);
+                                        }
+                                      },
+                                    ),
+                                    Divider()                                    
+                                  ],
+                                ),
+                              );
+                              
+                            }
+                            return SizedBox();
+                          },
+                        ),                      
                   
             
             
@@ -67,7 +114,7 @@ class _MediaViewState extends State<MediaView> with AutomaticKeepAliveClientMixi
                   
             
                         SizedBox(
-                          height: appState.isEditView ? MediaQuery.of(context).size.height*0.5 : MediaQuery.of(context).size.height,
+                          height: appState.isEditView ? MediaQuery.of(context).size.height*1.0 : MediaQuery.of(context).size.height,
                           child: GridView.builder(
                             itemCount: images.length,
                             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -161,19 +208,19 @@ class _MediaViewState extends State<MediaView> with AutomaticKeepAliveClientMixi
                         //   ),
                         // ),
                      
-                        Divider(),
+                        // Divider(),
 
-                        Text("Upload Images"),
+                        // Text("Upload Images"),
 
-                        MultiImageUploader(
-                          petId: widget.petId, // e.g. FirebaseAuth.instance.currentUser!.uid
-                          onUploadComplete: (urls) {
-                            print("Uploaded images:");
-                            for (final url in urls) {
-                              print(url);
-                            }
-                          },
-                        ),                                 
+                        // MultiImageUploader(
+                        //   petId: widget.petId, // e.g. FirebaseAuth.instance.currentUser!.uid
+                        //   onUploadComplete: (urls) {
+                        //     print("Uploaded images:");
+                        //     for (final url in urls) {
+                        //       print(url);
+                        //     }
+                        //   },
+                        // ),                                 
             
             
                           

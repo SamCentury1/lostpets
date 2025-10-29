@@ -97,6 +97,45 @@ class _PetScreenState extends State<PetScreen> {
     super.dispose();
   }
 
+  
+
+  void _savePage(AppState appState, Map<String,dynamic> petObject, SettingsController settings) {
+
+      print(petObject["media"]);
+    // if (appState.isEditView) {
+      List<dynamic> media = petObject["media"];
+      petObject.update("media", (e) => media);
+      appState.newPetObject.update("media", (e) => media);
+
+      List<dynamic> questionnaire = petObject["questionnaire"];
+      petObject.update("questionnaire", (e) => questionnaire);
+      appState.newPetObject.update("questionnaire", (e) => questionnaire);
+
+
+
+      FirestoreMethods().updatePetObjectInDatabase(settings, widget.petId, appState);
+
+      SnackBar snackBar = SnackBar(content: Text("Saved ${petObject["name"]}'s data"));
+      ScaffoldMessenger.of(context).showSnackBar(snackBar); 
+
+      setState(() {
+        settings.setPetData(settings.petData.value);
+        appState.setNewPetObject({});    
+        appState.setIsEditView(false);
+      });
+                         
+
+    // } else {
+    //   setState(() {
+    //     appState.setIsEditView(true);
+    //     appState.setNewPetObject(petObject);
+        
+    //   });                    
+    // }    
+  }
+
+  
+
 
 
   @override
@@ -113,37 +152,28 @@ class _PetScreenState extends State<PetScreen> {
               appBar: AppBar(
                 
                 title: Text("Pet Profile"),
+                leading: IconButton(
+                  onPressed: () {
+                    if (isPetOwner) {
+                      if (appState.isEditView) {
+                        _savePage(appState,petObject,settings);
+                      }
+                    }
+                    Navigator.of(context).pop();
+                  }, 
+                  icon: Icon(Icons.arrow_back)
+                ),
                 actions: [
-                  isPetOwner ? 
+                  (isPetOwner && !appState.isEditView) ? 
                   IconButton(
                     onPressed: () {
-                      if (appState.isEditView) {
+                      setState(() {
+                        appState.setIsEditView(true);
+                        appState.setNewPetObject(petObject);
 
-
-                        List<dynamic> media = petObject["media"];
-                        petObject.update("media", (e) => media);
-                        settings.setPetData(settings.petData.value);
-
-                        List<dynamic> questionnaire = petObject["questionnaire"];
-                        petObject.update("questionnaire", (e) => questionnaire);
-
-
-                        setState(() {
-                          appState.setIsEditView(false);
-                          settings.setPetData(settings.petData.value);
-                        });                                         
-
-                        SnackBar snackBar = SnackBar(content: Text("Saved ${petObject["name"]}'s data"));
-                        ScaffoldMessenger.of(context).showSnackBar(snackBar);                        
-            
-                      } else {
-                        setState(() {
-                          appState.setIsEditView(true);
-                        });                    
-                      }
-            
-                    }, 
-                    icon: appState.isEditView ? Icon(Icons.save) : Icon(Icons.edit)
+                      });                        
+                    },
+                    icon: Icon(Icons.edit)
                   ) : SizedBox()
                 ],
               ),

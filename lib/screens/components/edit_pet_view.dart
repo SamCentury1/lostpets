@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:tempoct2025/functions/helpers.dart';
@@ -97,6 +98,26 @@ class _EditPetViewState extends State<EditPetView> {
   }
 
 
+  void _updateLocation(AppState appState, LatLng? _selectedPosition) async {
+
+    // if (widget.petId!=null) {
+    if (_selectedPosition!=null) {
+      final newLocation = GeoPoint(_selectedPosition.latitude, _selectedPosition.longitude);
+      //   FirestoreMethods().updatePetLocation(widget.petId!,newLocation);
+      //   Helpers().updatePetLocationToSettings(settings, widget.petId!, newLocation);
+      // }
+      Map<String,dynamic> petObject = appState.newPetObject;
+      
+      petObject.update("location", (v)=> newLocation);
+      appState.setNewPetObject(petObject);
+
+      print("new position: LONG:${_selectedPosition!.longitude} LAT:${_selectedPosition!.latitude}");
+    }
+
+    Navigator.pop(context);
+  }
+
+
 
 
   Future<String?> getLocationText(Map<String,dynamic>? petObject) async {
@@ -133,10 +154,10 @@ class _EditPetViewState extends State<EditPetView> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
 
         setState(() {
-          Map<String,dynamic> petObject = Helpers().getPetObject(settings, widget.petId!);
-          _appState.setNewPetObject(petObject);
-          petNameController = TextEditingController(text: petObject["name"]);
-          getLocationText(petObject);
+          // Map<String,dynamic> petObject = Helpers().getPetObject(settings, widget.petId!);
+          // _appState.setNewPetObject(petObject);
+          petNameController = TextEditingController(text: _appState.newPetObject["name"]);
+          getLocationText(_appState.newPetObject);
           // getLocation(_appState.newPetObject);
         });
         // petNameController = TextEditingController(text: petObject["name"]);
@@ -231,6 +252,20 @@ class _EditPetViewState extends State<EditPetView> {
               const SizedBox(height: 24),
         
         
+
+              // Submit Button
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(50),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                onPressed: () => _savePet(settings,appState,petImage),
+                icon: const Icon(Icons.pets),
+                label: widget.petId != null ? const Text("Update Pet") : const Text("Save Pet"),
+              ),
+
+              SizedBox(height: 20,),
               // Pet Name
               TextField(
                 controller: petNameController,
@@ -435,7 +470,7 @@ class _EditPetViewState extends State<EditPetView> {
                         
                         onPressed: () {
                           Navigator.of(context).push(
-                            MaterialPageRoute(builder: (context) => MapPickerScreen(petId: widget.petId,))
+                            MaterialPageRoute(builder: (context) => MapPickerScreen(petId: widget.petId, onPressed: _updateLocation))
                           );                      
                         },
                         child: Text(
@@ -520,20 +555,6 @@ class _EditPetViewState extends State<EditPetView> {
                     ],
                   );
                 }).toList(),
-              ),            
-        
-        
-        
-              // Submit Button
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(50),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                ),
-                onPressed: () => _savePet(settings,appState,petImage),
-                icon: const Icon(Icons.pets),
-                label: const Text("Save Pet"),
               ),
             ],
           ),

@@ -55,24 +55,27 @@ class _QuestionnaireCardState extends State<QuestionnaireCard> {
                           widget.questionnaireObject["answer"],
                           style: Theme.of(context).primaryTextTheme.bodySmall,
                         )
-                      ),                        
+                      ),
+                      SizedBox(
+                        width: 30,
+                        height: 30,
+                        child: appState.isEditView
+                        ? Center(
+                          child: IconButton(
+                            padding: EdgeInsets.zero, // removes default padding
+                            constraints: BoxConstraints(), // prevents extra spacing                            
+                            onPressed: () {
+                              print("remove this bitch");
+                              _showRemoveQuestionDialog(context,widget.petId,widget.questionnaireObject);
+                            }, 
+                            icon: Icon(Icons.highlight_remove_sharp,size: 30,)
+                          ),
+                        ) : SizedBox(),
+                      )                        
                     ],
                   ),
                 ),
               ),
-
-              appState.isEditView ? 
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: IconButton(
-                  onPressed: () {
-                    print("remove this bitch");
-                    _showRemoveQuestionDialog(context,widget.petId,widget.questionnaireObject);
-                  }, 
-                  icon: Icon(Icons.remove)
-                ),
-              ) : SizedBox()
             ],
           ),
         );

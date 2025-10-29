@@ -137,28 +137,32 @@ class Widgets {
     );   
 
   }
-  Future<BitmapDescriptor> createCircularMarker(String imageUrl, {int size = 100}) async {
-    final response = await http.get(Uri.parse(imageUrl));
-    final Uint8List imageData = response.bodyBytes;
+  Future<BitmapDescriptor> createCircularMarker(String? imageUrl, {int size = 100}) async {
+    if (imageUrl != null && imageUrl != "") {
+      final response = await http.get(Uri.parse(imageUrl));
+      final Uint8List imageData = response.bodyBytes;
 
-    final ui.Codec codec = await ui.instantiateImageCodec(imageData, targetWidth: size);
-    final ui.FrameInfo frameInfo = await codec.getNextFrame();
+      final ui.Codec codec = await ui.instantiateImageCodec(imageData, targetWidth: size);
+      final ui.FrameInfo frameInfo = await codec.getNextFrame();
 
-    final ui.PictureRecorder recorder = ui.PictureRecorder();
-    final Canvas canvas = Canvas(recorder);
-    final Paint paint = Paint()..isAntiAlias = true;
+      final ui.PictureRecorder recorder = ui.PictureRecorder();
+      final Canvas canvas = Canvas(recorder);
+      final Paint paint = Paint()..isAntiAlias = true;
 
-    final double radius = size / 2.0;
-    final Rect rect = Rect.fromCircle(center: Offset(radius, radius), radius: radius);
+      final double radius = size / 2.0;
+      final Rect rect = Rect.fromCircle(center: Offset(radius, radius), radius: radius);
 
-    canvas.clipPath(Path()..addOval(rect));
-    canvas.drawImageRect(frameInfo.image, Rect.fromLTWH(0, 0, frameInfo.image.width.toDouble(), frameInfo.image.height.toDouble()), rect, paint);
+      canvas.clipPath(Path()..addOval(rect));
+      canvas.drawImageRect(frameInfo.image, Rect.fromLTWH(0, 0, frameInfo.image.width.toDouble(), frameInfo.image.height.toDouble()), rect, paint);
 
-    final ui.Image circularImage = await recorder
-        .endRecording()
-        .toImage(size, size);
-    final ByteData? byteData = await circularImage.toByteData(format: ui.ImageByteFormat.png);
-    return BitmapDescriptor.fromBytes(byteData!.buffer.asUint8List());
+      final ui.Image circularImage = await recorder
+          .endRecording()
+          .toImage(size, size);
+      final ByteData? byteData = await circularImage.toByteData(format: ui.ImageByteFormat.png);
+      return BitmapDescriptor.fromBytes(byteData!.buffer.asUint8List());
+    } else {
+      return BitmapDescriptor.pinConfig(backgroundColor: Colors.black);
+    }
   }
 
   

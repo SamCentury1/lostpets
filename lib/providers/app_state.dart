@@ -32,4 +32,21 @@ class AppState extends ChangeNotifier {
     _newPetObject = value;
     notifyListeners();
   }
+
+
+  late Map<String,dynamic> _newPostingData = {
+    "petId":"",
+    "name": "",
+    "displayUrl": "",
+    "description": "",
+    "missingSince": null,
+    "createdAt": null,
+    "location": null,
+    "reward":null,
+  };
+  Map<String,dynamic> get newPostingData => _newPostingData;
+  void setNewPostingData(Map<String,dynamic> value) {
+    _newPostingData = value;
+    notifyListeners();
+  }  
 }

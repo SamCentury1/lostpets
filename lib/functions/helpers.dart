@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:tempoct2025/settings/settings.dart';
@@ -53,24 +55,28 @@ class Helpers {
 
 
 
-  Future<String?> getPostalCodeFromGeoPoint(GeoPoint location) async {
+  Future<String?> getPostalCodeFromGeoPoint(GeoPoint? location) async {
     try {
 
-      print("LOCATION: $location");
-      List<Placemark> placemarks = await placemarkFromCoordinates(
-        location.latitude,
-        location.longitude,
-      );
+      if (location != null) {
+        print("LOCATION: $location");
+        List<Placemark> placemarks = await placemarkFromCoordinates(
+          location.latitude,
+          location.longitude,
+        );
 
-      if (placemarks.isNotEmpty) {
-        Placemark place = placemarks.first;
-        String? res = place.subLocality; 
-        if (place.subLocality == "") {
-          res = place.locality;
+        if (placemarks.isNotEmpty) {
+          Placemark place = placemarks.first;
+          String? res = place.subLocality; 
+          if (place.subLocality == "") {
+            res = place.locality;
+          }
+          return res; // ✅ Postal/ZIP code
+        } else {
+          return null;
         }
-        return res; // ✅ Postal/ZIP code
       } else {
-        return null;
+        return "";
       }
     } catch (e) {
       print('Error getting postal code: $e');
@@ -121,6 +127,30 @@ class Helpers {
     }
   }
 
+  Future<String?> getAddressFromGeoPoint2(GeoPoint location) async {
+    
+    try {
+      String? res = null;
+      print("LOCATION: $location");
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+        location.latitude,
+        location.longitude,
+      );
+
+      if (placemarks.isNotEmpty) {
+        Placemark place = placemarks.first;
+        // res = "${place.locality}, ${place.postalCode}"
+        return "${place.street}, ${place.postalCode}"; // ✅ Postal/ZIP code
+      } else {
+        return null;
+      }
+    } catch (e) {
+      print('Error getting postal code: $e');
+      return null;
+    }
+  }
+
+
   void updatePetLocationToSettings(SettingsController settings, String petId, GeoPoint location) {
     List<dynamic> petData = settings.petData.value;    
     Map<String,dynamic> petObject = petData.firstWhere((e)=>e["uid"]==petId,orElse: ()=><String,dynamic>{});
@@ -128,6 +158,16 @@ class Helpers {
     settings.setPetData(settings.petData.value);    
 
   }
+
+  double calculateDistance(lat1, lon1, lat2, lon2){
+    var p = 0.017453292519943295; //conversion factor from radians to decimal degrees, exactly math.pi/180
+    var c = cos;
+    var a = 0.5 - c((lat2 - lat1) * p)/2 +
+        c(lat1 * p) * c(lat2 * p) *
+            (1 - c((lon2 - lon1) * p))/2;
+    var radiusOfEarth = 6371;
+    return radiusOfEarth * 2 * asin(sqrt(a));
+  }  
 
   
 }

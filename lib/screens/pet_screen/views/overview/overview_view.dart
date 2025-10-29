@@ -43,7 +43,7 @@ class _OverviewViewState extends State<OverviewView> {
   }
 
   Future<void> loadPosition(Map<String,dynamic> petObject) async {
-    final GeoPoint location = petObject['location'];
+    final GeoPoint? location = petObject['location'];
     final postalCode = await Helpers().getPostalCodeFromGeoPoint(location);
     setState(() {
       _postalCode = postalCode!;
@@ -57,13 +57,13 @@ class _OverviewViewState extends State<OverviewView> {
     super.initState();
     SettingsController _settings = Provider.of<SettingsController>(context, listen: false);
     Map<String,dynamic> userData = _settings.userData.value as Map<String,dynamic>;
-    Map<String,dynamic> petObject = Helpers().getPetObject(_settings,widget.petId);   
-    if (petObject["guardians"].contains(userData["uid"])) {
+    Map<String,dynamic> _petObject = Helpers().getPetObject(_settings,widget.petId);   
+    if (_petObject["guardians"].contains(userData["uid"])) {
       setState(() {
         isOwner = true;
       });
     }
-    loadPosition(petObject);
+    loadPosition(_petObject);
 
   }
 
@@ -169,40 +169,135 @@ class _OverviewViewState extends State<OverviewView> {
                               )
                             ),
                           ),
+
+                          Builder(
+                            builder: (context) {
+                              if (isOwner) {
+                                if (petObject["isLost"]) {
+                                  return Padding(
+                                    padding: const EdgeInsets.all(12.0),
+                                    child: ElevatedButton(
+                                      onPressed: () {
+                                        // Navigator.of(context).push(
+                                        //   MaterialPageRoute(builder: (context) => NewPostingScreen(petId: widget.petId,))
+                                        // );                      
+                                      }, 
+                                      style: ElevatedButton.styleFrom(
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadiusGeometry.all(Radius.circular(12.0)),
+                                        ),
+                                        // minimumSize: Size(300,60),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.edit,size: 22.0,),
+                                          SizedBox(width: 20.0,),                                  
+                                          Text(
+                                            "Edit Posting",
+                                            style: TextStyle(
+                                              fontSize: 22.0
+                                            )
+                                          ),
+                                        ],
+                                      )
+                                    ),
+                                  );
+                                
+                                } else {
+                                  return Padding(
+                                    padding: const EdgeInsets.all(12.0),
+                                    child: ElevatedButton(
+                                      onPressed: () {
+                                        setState(() {
+                                          appState.setNewPostingData({
+                                            "petId":widget.petId,
+                                            "name": petObject["name"],
+                                            "displayUrl":petObject["displayUrl"],
+                                            "description": "",
+                                            "missingSince": null,
+                                            "createdAt": null,
+                                            "location": petObject["location"],
+                                            "reward":null,
+                                          });
+                                        });
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(builder: (context) => NewPostingScreen(petId: widget.petId,))
+                                        );                      
+                                      }, 
+                                      style: ElevatedButton.styleFrom(
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadiusGeometry.all(Radius.circular(12.0)),
+                                        ),
+                                        minimumSize: Size(300,100),
+                                        backgroundColor: Colors.redAccent
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                        children: [
+                                          Icon(Icons.warning,size: 30.0,),
+                                          SizedBox(width: 20.0,),
+                                          Text(
+                                            "Post Lost Pet",
+                                            style: TextStyle(
+                                              fontSize: 30.0
+                                            )
+                                          ),
+                                          SizedBox(width: 20.0,),                                  
+                                          Icon(Icons.warning,size: 30.0,),
+                                        ],
+                                      )
+                                    ),
+                                  );
+                                }
+                              } else {
+                                return SizedBox();
+                              }
+                            }
+                          ),
               
-                          isOwner ? 
-                          Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: ElevatedButton(
-                              onPressed: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(builder: (context) => NewPostingScreen(petId: widget.petId,))
-                                );                      
-                              }, 
-                              style: ElevatedButton.styleFrom(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadiusGeometry.all(Radius.circular(12.0)),
-                                ),
-                                minimumSize: Size(300,100),
-                                backgroundColor: Colors.redAccent
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  Icon(Icons.warning,size: 30.0,),
-                                  SizedBox(width: 20.0,),
-                                  Text(
-                                    "Post Lost Pet",
-                                    style: TextStyle(
-                                      fontSize: 30.0
-                                    )
-                                  ),
-                                  SizedBox(width: 20.0,),                                  
-                                  Icon(Icons.warning,size: 30.0,),
-                                ],
-                              )
-                            ),
-                          ) : SizedBox()
+                          // isOwner && !petObject["isLost"] ? 
+                          // Padding(
+                          //   padding: const EdgeInsets.all(12.0),
+                          //   child: ElevatedButton(
+                          //     onPressed: () {
+                          //       setState(() {
+                          //         appState.setNewPostingData({
+                          //           "petId":widget.petId,
+                          //           "description": "",
+                          //           "missingSince": null,
+                          //           "createdAt": null,
+                          //           "location": petObject["location"],
+                          //           "reward":null,
+                          //         });
+                          //       });
+                          //       Navigator.of(context).push(
+                          //         MaterialPageRoute(builder: (context) => NewPostingScreen(petId: widget.petId,))
+                          //       );                      
+                          //     }, 
+                          //     style: ElevatedButton.styleFrom(
+                          //       shape: RoundedRectangleBorder(
+                          //         borderRadius: BorderRadiusGeometry.all(Radius.circular(12.0)),
+                          //       ),
+                          //       minimumSize: Size(300,100),
+                          //       backgroundColor: Colors.redAccent
+                          //     ),
+                          //     child: Row(
+                          //       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          //       children: [
+                          //         Icon(Icons.warning,size: 30.0,),
+                          //         SizedBox(width: 20.0,),
+                          //         Text(
+                          //           "Post Lost Pet",
+                          //           style: TextStyle(
+                          //             fontSize: 30.0
+                          //           )
+                          //         ),
+                          //         SizedBox(width: 20.0,),                                  
+                          //         Icon(Icons.warning,size: 30.0,),
+                          //       ],
+                          //     )
+                          //   ),
+                          // ) : SizedBox()
               
                           // Text(
                           //   "Vaccines",

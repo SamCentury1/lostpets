@@ -1,5 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:intl/intl.dart';
+import 'package:tempoct2025/functions/helpers.dart';
 import 'package:tempoct2025/functions/widgets.dart';
 import 'package:tempoct2025/resources/firestore_methods.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -20,6 +23,7 @@ class _PetMapScreenState extends State<PetMapScreen> {
   late GoogleMapController _controller;
   final Set<Marker> _markers = {};
   String? _mapStyle = '';
+  late Position? _position;
 
 
   Future<void> _ensureLocationPermission() async {
@@ -54,6 +58,8 @@ class _PetMapScreenState extends State<PetMapScreen> {
     _ensureLocationPermission();
     loadPets();
     _loadMapStyle();
+    _position = null;
+    
   }
 
 
@@ -61,6 +67,7 @@ class _PetMapScreenState extends State<PetMapScreen> {
 
   Future<void> _loadMapStyle() async {
     final style = await rootBundle.loadString('assets/json/map_style.json');
+    if (!mounted) return;
     setState(() {
       _mapStyle = style;
     });
@@ -71,37 +78,46 @@ class _PetMapScreenState extends State<PetMapScreen> {
     if (widget.petObject != null) {
       pets = [widget.petObject!];
     } else {
-      pets = await FirestoreMethods().fetchPetLocations();
+      pets = await FirestoreMethods().fetchLostPetLocations();
     }
     
     Set<Marker> markers = {};
 
     for (final pet in pets) {
+      print("pet: $pet");
       final icon = await Widgets().createCircularMarker(pet["displayUrl"], size: 120);
+      final LatLng pos = LatLng(pet["location"].latitude, pet["location"].longitude);
+      print(pet["location"].runtimeType);
       markers.add(
         Marker(
           markerId: MarkerId(pet["uid"]),
-          position: LatLng(
-            pet["location"]["latitude"],
-            pet["location"]["longitude"],
-          ),
+          position: pos, //pet["location"],
+          // position: LatLng(
+          //   pet["location"]["latitude"],
+          //   pet["location"]["longitude"],
+          // ),
           icon: icon,
-          onTap: () => _showPetDetails(context, pet),
+          onTap: () => _showPetDetails(context, pet, _position),
         ),
       );    
     }
+    if (!mounted) return;
     setState(() => _markers.addAll(markers));
   }
 
 
 
-  Future<void> _goToLocation(Map<String,dynamic>? petObject, GoogleMapController controller) async {
+  Future<void> _goToLocation(Map<String,dynamic>? petObject, GoogleMapController controller, Position? position) async {
 
     late LatLng endPosition = LatLng(0, 0);
 
     Position position = await Geolocator.getCurrentPosition(
       desiredAccuracy: LocationAccuracy.high,
     );
+
+    setState(() {
+      _position = position;
+    });
 
     if (petObject != null) {
       endPosition = LatLng(petObject["location"].latitude, petObject["location"].longitude); 
@@ -117,10 +133,25 @@ class _PetMapScreenState extends State<PetMapScreen> {
         ),
       ),
     );
-  }  
+  }
+
+
+  @override
+  void dispose() {
+    if (mounted) {
+      try {
+        _controller.dispose();
+      } catch (_) {
+        // ignore if controller not yet created
+      }
+    }
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+
+  
     return Builder(
       builder: (context) {
         // return Scaffold(
@@ -131,7 +162,7 @@ class _PetMapScreenState extends State<PetMapScreen> {
               return GoogleMap(
                 onMapCreated: (controller) {
                   _controller = controller;
-                  _goToLocation(widget.petObject, controller);
+                  _goToLocation(widget.petObject, controller, _position);
                 } ,
                 style: _mapStyle, // 👈 NEW way to apply style
                 initialCameraPosition: const CameraPosition(
@@ -175,7 +206,29 @@ class _PetMapScreenState extends State<PetMapScreen> {
   }
 }
 
-void _showPetDetails(BuildContext context, Map<String, dynamic> pet) {
+void _showPetDetails(BuildContext context, Map<String, dynamic> pet, Position? position) {
+
+
+  String missingSince = DateFormat.yMMMd().format(pet["missingSince"].toDate());
+  // double distance = Helpers().calculateDistance(pet["location"]["latitude"], pet["location"]["longitude"], position!.latitude, position!.longitude);
+    double distance = Helpers().calculateDistance(pet["location"].latitude, pet["location"].longitude, position!.latitude, position!.longitude);
+  print(distance);
+
+  Future<String?> getLocationText(Map<String,dynamic>? postingObject) async {
+    String? res = null;
+    print("location??: ${postingObject!["location"]}");
+    try {
+      if (postingObject!["location"] != null) {      
+        print("location: ${postingObject["location"]}");
+        final GeoPoint location = GeoPoint(postingObject!["location"].latitude,postingObject!["location"].longitude);
+        res = await Helpers().getPostalCodeFromGeoPoint(location);
+      }
+    } catch(e,s) {
+      debugPrint("error: $e | stacktrace: $s");
+    }
+    return res;
+  } 
+
   showModalBottomSheet(
     context: context,
     backgroundColor: Colors.white,
@@ -206,6 +259,28 @@ void _showPetDetails(BuildContext context, Map<String, dynamic> pet) {
               const SizedBox(height: 8),
               Text(pet["description"]),
             ],
+
+            if (pet["missingSince"] != null) ...[
+              const SizedBox(height: 8),
+              Text("Missing since: ${missingSince}"),
+            ],
+
+            FutureBuilder(
+              future: getLocationText(pet), 
+              builder: (BuildContext context, AsyncSnapshot asyncSnapshot) {
+                if (asyncSnapshot.hasError) {
+                  return Text("error");
+                } else if (asyncSnapshot.connectionState == ConnectionState.waiting) {
+                  return Text("loading");
+                } else if (asyncSnapshot.hasData) {
+                  return Text("${asyncSnapshot.data} (${(distance.floor())} km away)");
+                } else {
+                  return Text("No data");
+                }
+                
+              }
+            ),         
+
             const SizedBox(height: 16),
           ],
         ),

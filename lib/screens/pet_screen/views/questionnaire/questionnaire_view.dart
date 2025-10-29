@@ -47,46 +47,84 @@ class _QuestionnaireViewState extends State<QuestionnaireView> {
                 child: Column(
                   children: [
                     SizedBox(height: 30,),
-                  
+
+
                     Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Row(
-                        children: [
-                          Text(
-                            "Charactersitics",
-                            style: Theme.of(context).primaryTextTheme.bodyLarge,
-                          ),
-                        ],
+                      padding: const EdgeInsets.all(8.0),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text("Characteristics",style: Theme.of(context).primaryTextTheme.bodyLarge,),
                       ),
                     ),
-            
-                    Column(
-                      children: _questionnaire.map((e) {
-                        return QuestionnaireCard(petId:widget.petId, questionnaireObject: e);
-                      }).toList(),
+                    SizedBox(height: 15,),                       
+    
+
+                    Builder(
+                      builder: (context) {
+                        if (appState.isEditView) {
+                          return Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Column(
+                              children: [
+ 
+                            
+                                Card(
+                                  color: Theme.of(context).cardColor,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: Text(
+                                        "Create a questionnaire of unique characteristics to help users identify your pet",
+                                        style: Theme.of(context).primaryTextTheme.bodySmall,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(height: 15,),
+                                ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    minimumSize: Size(double.infinity, 50),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.all(Radius.circular(4.0))
+                                    )
+                                  ),                      
+                                  onPressed: () {
+                                    _showQuestionnaireDialog(context,settings);
+                                    print("open a modal to add a question");
+                                  }, 
+                                  child: Text("Add Characteristic")
+                                ),
+                                SizedBox(height: 15,),
+                                Divider()      
+                              ],
+                            ),
+                          );
+
+                        } else {
+                          return SizedBox();
+                        }
+                      }
                     ),
-            
-                    // ListView.builder(
-                    //   padding: const EdgeInsets.all(8),
-                    //   physics: const NeverScrollableScrollPhysics(),
-                    //   shrinkWrap: true,
-                    //   itemCount: questionnaire.length,
-                    //   itemBuilder: (BuildContext context, int i) {
-                    //     return QuestionnaireCard(questionnaireObject: questionnaire[i]);
-                    //   }
-                    // ),
-            
-                    appState.isEditView ?  
-                    ElevatedButton(
-                      onPressed: () {
-                        _showQuestionnaireDialog(context,settings);
-                        print("open a modal to add a question");
-                      }, 
-                      child: Text("Add Characteristic")
-                    ) : SizedBox(),                  
-            
-            
-            
+                
+
+                            
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Builder(
+                        builder: (context) {
+                          if (questionnaire.isEmpty) {
+                            return Text("No questions to dispaly yet");
+                          } else {
+                            return Column(
+                              children: _questionnaire.map((e) {
+                                return QuestionnaireCard(petId:widget.petId, questionnaireObject: e);
+                              }).toList(),
+                            );
+                          }
+                        }
+                      ),
+                    ),                            
                   ],
                 )
               ),

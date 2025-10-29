@@ -113,9 +113,15 @@ class _MultiImageUploaderState extends State<MultiImageUploader> {
     return Column(
       children: [
         ElevatedButton.icon(
+          style: ElevatedButton.styleFrom(
+            minimumSize: Size(double.infinity, 50),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(4.0))
+            )
+          ),
           onPressed: _isLoading ? null : _pickImages,
           icon: const Icon(Icons.photo_library),
-          label: const Text('Select Photos'),
+          label: const Text('Add Images'),
         ),
         const SizedBox(height: 12),
         if (_isLoading && _images.isEmpty)
