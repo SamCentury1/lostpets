@@ -24,20 +24,20 @@ class _AuthScreenState extends State<AuthScreen> {
 
     // final SettingsController settings = Provider.of<SettingsController>(context,listen:false);
   
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      setState(() {
-        // StorageMethods().saveDeviceSizeInfoToSettings(settings);
-        final SettingsController settings = Provider.of<SettingsController>(context, listen: false);
-        StorageMethods().saveDeviceSizeInfoToSettings(settings);
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   setState(() {
+    //     // StorageMethods().saveDeviceSizeInfoToSettings(settings);
+    //     final SettingsController settings = Provider.of<SettingsController>(context, listen: false);
+    //     StorageMethods().saveDeviceSizeInfoToSettings(settings);
      
-      });
-    });        
+    //   });
+    // });        
   }  
   @override
   Widget build(BuildContext context) {
 
-    final SettingsController settings = Provider.of<SettingsController>(context,listen:false);
-    final ColorPalette palette = Provider.of<ColorPalette>(context,listen:false);
+    // final SettingsController settings = Provider.of<SettingsController>(context,listen:false);
+    // final ColorPalette palette = Provider.of<ColorPalette>(context,listen:false);
 
 
     
@@ -47,58 +47,74 @@ class _AuthScreenState extends State<AuthScreen> {
         builder: (context, snapshot) {
           // print("Snapshot: $snapshot");
 
+
           if (snapshot.connectionState == ConnectionState.waiting) {
-            print("waiting");
-            // return Scaffold(body: Center(child: CircularProgressIndicator()));
-            return Scaffold(
-              backgroundColor: Colors.transparent,
-              body: SizedBox(
-                width:MediaQuery.of(context).size.width, 
-                height:MediaQuery.of(context).size.height,
-                child: Center(
-                  child: CircularProgressIndicator(),
-                ),
+            debugPrint("streaming auth state changes --- loading...");
+            return loadingScreen(context);
+          }
 
-              )
-            );            
-          } else {
-            if (snapshot.hasData) {
-              
+          if (snapshot.hasError) {
+            debugPrint("an error occured at auth screen : ${snapshot.error} | ${snapshot.stackTrace}");
+            return errorScreen(context, snapshot.error.toString(),snapshot.stackTrace.toString());
+          }
 
-              return FutureBuilder(
-                future: Initializations().initializeAppData(settings, palette, snapshot.data), 
-                builder: (context, AsyncSnapshot<void> futureSnapshot) {
-                  if (futureSnapshot.connectionState == ConnectionState.waiting) {
-                    // return Scaffold(body: Center(child: CircularProgressIndicator()));
-                    return Scaffold(
-                      backgroundColor: Colors.transparent,
-                      body: SizedBox(
-                        width:MediaQuery.of(context).size.width, 
-                        height:MediaQuery.of(context).size.height,
-                        child: Center(
-                          child: CircularProgressIndicator(),
-                        ),
-                      )
-                    );                    
-                  } else if (futureSnapshot.hasError) {
-                    return Scaffold(body: Center(child: Text('Error: ${futureSnapshot.error} | ${futureSnapshot.stackTrace}')));
-                  } else {
-                    return HomeScreen(); // Only return after getScreenSizeData() completes
+          if (!snapshot.hasData) {
+            debugPrint("no authenticated user --- go to login or register screen");
+            return LoginOrRegisterScreen();
+          }
 
-                  }
-                }
-              );
-              // return HomeScreen();
-            }else {
-              print("============================================");
-              print("hm! ");
-              print("============================================");
-              // setScreenSizeData(context);
-              return LoginOrRegisterScreen();
+          final settings = context.read<SettingsController>();
+          // final palette  = context.read<ColorPalette>();             
+
+          return FutureBuilder(
+            future: Initializations().initializeAppData(settings, snapshot.data), 
+            builder: (context, AsyncSnapshot<void> futureSnapshot) {
+              if (futureSnapshot.connectionState == ConnectionState.waiting) {
+                return loadingScreen(context);
+              }
+
+              if (futureSnapshot.hasError) {
+                return errorScreen(context, futureSnapshot.error.toString(), futureSnapshot.stackTrace.toString());
+              } 
+
+              return HomeScreen();
             }
-          } 
+          );          
         },
       );
     
   }
+}
+
+
+Widget loadingScreen(BuildContext context) {
+  return Scaffold(
+    backgroundColor: Colors.transparent,
+    body: SizedBox(
+      width:MediaQuery.of(context).size.width, 
+      height:MediaQuery.of(context).size.height,
+      child: Center(
+        child: CircularProgressIndicator(),
+      ),
+
+    )
+  );    
+}
+
+Widget errorScreen(BuildContext context, String error, String stackTrace) {
+  return Scaffold(
+    backgroundColor: Colors.transparent,
+    body: SizedBox(
+      width:MediaQuery.of(context).size.width, 
+      height:MediaQuery.of(context).size.height,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Flexible(child: Text("Error: $error")),
+          Flexible(child: Text("Stacktrace: $stackTrace")),
+        ],
+      ),
+
+    )
+  );    
 }

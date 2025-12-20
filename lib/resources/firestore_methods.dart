@@ -22,6 +22,25 @@ class FirestoreMethods {
     return docStream.data() as Map<String, dynamic>;
   } 
 
+  Future<List<Map<String,dynamic>>> retrieveRequestDocuments(String userId) async {
+
+    List<Map<String, dynamic>> results = [];
+    try {
+
+      QuerySnapshot<Map<String, dynamic>> snapshot = await _firestore
+          .collection('requests')
+          .where('targetId', isEqualTo: userId)
+          .get();
+
+      for (var doc in snapshot.docs) {
+        results.add(doc.data());
+      }
+    } catch (e,s) {
+      debugPrint("error at retrieveRequestDocuments: $e | stacktrace: $s");
+    }
+    return results;   
+  }
+
 
   Future<List<Map<String,dynamic>>> getPetDocumentsFromDatabase(String uid) async {
     List<Map<String,dynamic>> petData = [];
@@ -45,6 +64,52 @@ class FirestoreMethods {
     return petData;
   }
 
+  Future<List<Map<String,dynamic>>> retrieveSelectPetDocuments(List<dynamic> petIds) async {
+    if (petIds.isEmpty) return [];
+
+    try {
+      // Firestore whereIn allows max 10 items
+      const int batchSize = 10;
+      List<Map<String, dynamic>> results = [];
+
+      for (int i = 0; i < petIds.length; i += batchSize) {
+        final List<dynamic> batch = petIds.sublist(
+          i,
+          i + batchSize > petIds.length ? petIds.length : i + batchSize,
+        );
+
+        QuerySnapshot<Map<String, dynamic>> snapshot = await _firestore
+            .collection('pets')
+            .where('uid', whereIn: batch)
+            .get();
+
+        for (var doc in snapshot.docs) {
+          results.add(doc.data());
+        }
+      }
+
+      return results;
+    } catch (e,s) {
+      debugPrint("error retrieveSelectPetDocuments : $e | s: $s");
+      return [];
+    }
+  }
+
+  Future<void> updateRequestDocument(SettingsController settings, String requestId, String field, dynamic value) async {
+    final docRef = FirebaseFirestore.instance.collection('requests').doc(requestId);
+    List<dynamic> requests = settings.requestsData.value;
+    Map<String,dynamic> requestDoc = requests.firstWhere((e)=>e["uid"]==requestId,orElse: ()=><String,dynamic>{});
+    if (requestDoc.isNotEmpty) {
+      requestDoc.update(field, (v)=>value);
+    }
+    settings.setRequestsData(requests);
+    try {
+      await docRef.update({field: value});
+    } catch (e,s) {
+      debugPrint("error in updateRequestDocument: $e | stacktrace: $s");
+    }
+
+  }  
 
 
 // Future<String?> uploadPetImage(File imageFile, String petId) async {
@@ -182,6 +247,39 @@ class FirestoreMethods {
     }
   }
 
+  Future<String?> validateTargetEmail(String email) async {
+    late String? res;
+    final snapshot = await _firestore
+        .collection('users')
+        .where('email', isEqualTo: email)
+        .limit(1)
+        .get();
+
+    if (snapshot.docs.isNotEmpty) {
+      // res = true;
+      res = snapshot.docs.first.id;
+    }
+    return res;
+  }
+
+  Future<void> createRequestDocument(Map<String,dynamic> requestObj) async {
+
+    final docRef = _firestore.collection('requests').doc();
+
+    final Map<String,dynamic> userDocument = {
+      "uid": docRef.id,
+      "createdAt": DateTime.now().toIso8601String(),
+      "message": requestObj["message"],
+      "pets": requestObj["pets"],
+      "sourceId": requestObj["sourceId"],
+      "targetId": requestObj["targetId"],
+      "type": requestObj["type"],
+      "status":"pending",
+      "viewed":false,
+    };
+    await docRef.set(userDocument);    
+  }
+
 
   Future<void> updatePetObjectInDatabase(SettingsController settings, String petId, AppState appState) async {
     try {
@@ -229,8 +327,9 @@ class FirestoreMethods {
       "email": email,
       "phoneNumber": "",
       "parameters" : {
-        "theme": 'blue',
+        "theme": 'light',
       },
+      "notifications":[],
       "pets": [],
       "createdAt": DateTime.now().toIso8601String(),
       "providerData": providerData,   
@@ -271,6 +370,24 @@ class FirestoreMethods {
       await docRef.update({"questionnaire": updatedValue});
     } catch (e) {
       debugPrint("caught an error running 'updatePetQuestionnaire()' ${e.toString()}");
+    }
+  }
+
+
+  Future<void> addGuardianToPet(String userId, String petId) async {
+    try {
+      // List<dynamic> petData = settings.petData.value;
+      // Map<String,dynamic> petObject = petData.firstWhere((e)=>e["uid"]==petId, orElse: ()=><String,dynamic>{});
+      // petObject.update("guardians", (v) => updatedValue);
+      // settings.setPetData(petData);
+      final docRef = FirebaseFirestore.instance.collection('pets').doc(petId);
+      final docSnap = await docRef.get();
+      Map<String,dynamic>? petObject = docSnap.data();
+      List<dynamic> guardians = petObject!["guardians"];
+      guardians.add(userId);
+      await docRef.update({"guardians": guardians});
+    } catch (e) {
+      debugPrint("caught an error running 'addGuardianToPet()' ${e.toString()}");
     }
   }
 

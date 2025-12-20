@@ -4,6 +4,32 @@ class ColorPalette extends ChangeNotifier {
 
 
   late Map<String,dynamic> themes2 = {
+
+      "dark": {
+        "seedColor" : const Color.fromARGB(255, 51, 50, 50),
+        "cardColor" : const Color.fromARGB(255, 33, 35, 116),
+        "appBarThemeColor" : const Color.fromARGB(255, 54, 54, 54),
+        "appBarTextColor": const Color.fromARGB(255, 236, 236, 236),
+        "dividerColor": const Color.fromARGB(255, 189, 189, 189),
+        "scaffoldBackgroundColor" : const Color.fromARGB(255, 43, 43, 43),
+        "primaryTextThemeColor" : const Color.fromARGB(255, 231, 231, 231),
+        "elevatedButtonBackgroundColor" : const Color.fromARGB(255, 62, 30, 112),
+        "elevatedButtonForegroundColor" : const Color.fromARGB(255, 240, 240, 240),
+      },
+
+      "light": {
+        "seedColor" : const Color.fromARGB(255, 224, 195, 243),
+        "cardColor" : const Color.fromARGB(255, 239, 231, 248),
+        "appBarThemeColor" : const Color.fromARGB(255, 227, 212, 247),
+        "appBarTextColor": const Color.fromARGB(255, 15, 15, 15),
+        "dividerColor": const Color.fromARGB(255, 53, 53, 53),
+        "scaffoldBackgroundColor" : const Color.fromARGB(255, 255, 255, 255),
+        "primaryTextThemeColor" : const Color.fromARGB(255, 17, 17, 17),
+        "elevatedButtonBackgroundColor" : const Color.fromARGB(255, 213, 193, 230),
+        "elevatedButtonForegroundColor" : const Color.fromARGB(255, 36, 36, 36),
+      },
+
+
       "red": {
         "seedColor" : Colors.red,
         "cardColor" : const Color.fromARGB(255, 245, 122, 113),
@@ -78,7 +104,7 @@ class ColorPalette extends ChangeNotifier {
 
   };
 
-  late String _currentThemeName = "red";
+  late String _currentThemeName = "light";
   String get currentThemeName => _currentThemeName;
 
   late ThemeData _currentTheme = ThemeData (
@@ -127,9 +153,21 @@ class ColorPalette extends ChangeNotifier {
 
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: themes2[_currentThemeName]["elevatedButtonBackgroundColor"],
-        foregroundColor: themes2[_currentThemeName]["elevatedButtonForegroundColor"],
+      style: ButtonStyle(
+        shape: WidgetStateProperty.all(
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
+        minimumSize: WidgetStateProperty.all(
+          const Size(double.infinity, 30),
+        ),
+        backgroundColor: WidgetStateProperty.all(
+          themes2[_currentThemeName]["elevatedButtonBackgroundColor"],
+        ),
+        foregroundColor: WidgetStateProperty.all(
+          themes2[_currentThemeName]["elevatedButtonForegroundColor"],
+        ),
       ),
     ),
   );
@@ -147,6 +185,8 @@ class ColorPalette extends ChangeNotifier {
   
 
   void selectTheme2(String theme) {
+    print("themes2: $theme");
+    print(themes2);
     _currentTheme = ThemeData (
       colorScheme: ColorScheme.fromSeed(
         seedColor: themes2[theme]["seedColor"]

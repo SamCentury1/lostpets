@@ -121,7 +121,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       
               Column(
                 children: petData.map((e) {
-                  return PetCardWidget(petId: e["uid"]);
+                  return PetCardWidget(petData: e);
                 }).toList(),
               )
       

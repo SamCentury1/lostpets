@@ -22,7 +22,7 @@ class LocalStorageSettingsPersistence extends SettingsPersistence {
   @override
   Future<String> getTheme() async {
     final prefs = await instanceFuture;
-    return prefs.getString('theme') ?? "default";
+    return prefs.getString('theme') ?? "light";
   }  
 
   @override
@@ -36,6 +36,14 @@ class LocalStorageSettingsPersistence extends SettingsPersistence {
     final prefs = await instanceFuture;
     return json.decode(prefs.getString("petData")??json.encode([]));
   }  
+
+  @override
+  Future<List<dynamic>> getRequestsData() async {
+    final prefs = await instanceFuture;
+    return json.decode(prefs.getString("requestsData")??json.encode([]));
+  }  
+
+
 
 
 
@@ -79,6 +87,13 @@ class LocalStorageSettingsPersistence extends SettingsPersistence {
     }).toList();
     prefs.setString("petData", json.encode(serializableList)); 
   }       
+
+  @override
+  Future<void> saveRequestsData(List<dynamic> value) async {
+    final prefs = await instanceFuture;
+    prefs.setString("requestsData", json.encode(value)); 
+  }       
+
 
 
 

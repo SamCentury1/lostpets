@@ -26,36 +26,36 @@ class _PetMapScreenState extends State<PetMapScreen> {
   late Position? _position;
 
 
-  Future<void> _ensureLocationPermission() async {
-    bool serviceEnabled;
-    LocationPermission permission;
+  // Future<void> _ensureLocationPermission() async {
+  //   bool serviceEnabled;
+  //   LocationPermission permission;
 
-    // Check if location services are enabled
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      await Geolocator.openLocationSettings();
-      return;
-    }
+  //   // Check if location services are enabled
+  //   serviceEnabled = await Geolocator.isLocationServiceEnabled();
+  //   if (!serviceEnabled) {
+  //     await Geolocator.openLocationSettings();
+  //     return;
+  //   }
 
-    // Check permission
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        return; // Permissions still denied
-      }
-    }
+  //   // Check permission
+  //   permission = await Geolocator.checkPermission();
+  //   if (permission == LocationPermission.denied) {
+  //     permission = await Geolocator.requestPermission();
+  //     if (permission == LocationPermission.denied) {
+  //       return; // Permissions still denied
+  //     }
+  //   }
 
-    if (permission == LocationPermission.deniedForever) {
-      // Permissions permanently denied
-      return;
-    }
-  }
+  //   if (permission == LocationPermission.deniedForever) {
+  //     // Permissions permanently denied
+  //     return;
+  //   }
+  // }
 
   @override
   void initState() {
     super.initState();
-    _ensureLocationPermission();
+    // _ensureLocationPermission();
     loadPets();
     _loadMapStyle();
     _position = null;
@@ -115,6 +115,7 @@ class _PetMapScreenState extends State<PetMapScreen> {
       desiredAccuracy: LocationAccuracy.high,
     );
 
+    if (!mounted) return;
     setState(() {
       _position = position;
     });
@@ -156,9 +157,11 @@ class _PetMapScreenState extends State<PetMapScreen> {
       builder: (context) {
         // return Scaffold(
           // appBar: AppBar(title: Text("Pet Map")),
-          if (_mapStyle == null) {
+          if (_mapStyle == null || _markers.isEmpty) {
             return Center(child: CircularProgressIndicator());
           } else {
+            try {
+              print("markers: $_markers");
               return GoogleMap(
                 onMapCreated: (controller) {
                   _controller = controller;
@@ -178,6 +181,10 @@ class _PetMapScreenState extends State<PetMapScreen> {
                 tiltGesturesEnabled: true,
                 myLocationButtonEnabled: true,            
               );            
+            } catch (e,s) {
+              debugPrint("error loading map: ${e.toString()} | stacktrace: ${s.toString()}");
+              return SizedBox(child: Text("Error"),);
+            }
           }
           // body: _mapStyle == null
           //   ? const Center(child: CircularProgressIndicator())

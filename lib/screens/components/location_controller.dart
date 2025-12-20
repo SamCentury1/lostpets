@@ -16,7 +16,7 @@ class AddressSearchBar extends StatefulWidget {
 
 class _AddressSearchBarState extends State<AddressSearchBar> {
   final TextEditingController _controller = TextEditingController();
-  final String apiKey = 'API_KEY';
+  final String apiKey = 'GOOGLE_MAPS_API_KEY'; // <!--GOOGLE_MAPS_API_KEY-->
 
   @override
   Widget build(BuildContext context) {

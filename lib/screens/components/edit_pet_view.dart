@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:tempoct2025/functions/helpers.dart';
 import 'package:tempoct2025/providers/app_state.dart';
 import 'package:tempoct2025/resources/firestore_methods.dart';
+import 'package:tempoct2025/resources/storage_methods.dart';
 // import 'package:flutter_google_places/flutter_google_places.dart';
 // import 'package:google_maps_webservice/places.dart';
 import 'package:tempoct2025/screens/components/map_picker_screen.dart';
@@ -677,6 +678,11 @@ class _EditPetViewState extends State<EditPetView> {
 
       //  createPetObject
       FirestoreMethods().createPetObjectInDatabase(settings, appState, petImage);
+      List<dynamic> petData = settings.petData.value;
+      petData.add(appState.newPetObject);
+      
+      settings.setPetData(petData);
+
     } else {
       // appState.newPetObject.update("name",(v) => petNameController.text);
       // appState.newPetObject.update("species",(v) => species);
@@ -692,6 +698,9 @@ class _EditPetViewState extends State<EditPetView> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Pet saved successfully!')),
     );
+
+    
+    
     appState.setIsEditView(false);
     Navigator.pushAndRemoveUntil<void>(
       context,

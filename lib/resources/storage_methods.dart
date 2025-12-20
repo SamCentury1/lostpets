@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:tempoct2025/resources/firestore_methods.dart';
 import 'package:tempoct2025/settings/settings.dart';
 
 class StorageMethods {
@@ -22,7 +23,13 @@ class StorageMethods {
       "scalor":scalor,
     };
     settings.setDeviceSizeInfo(deviceSizeInfo);
-
-
   }  
+
+
+  Future<void> saveRequestDataToLocalStorage(SettingsController settings) async {
+    Map<String,dynamic> userData = settings.userData.value as Map<String,dynamic>;
+    // List<dynamic> requests = userData["notifications"];
+    List<Map<String,dynamic>> requestDocuments = await FirestoreMethods().retrieveRequestDocuments(userData["uid"]);
+    settings.setRequestsData(requestDocuments);
+  }
 }

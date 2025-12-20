@@ -457,8 +457,7 @@ class _NewPostingScreenState extends State<NewPostingScreen> {
             ),
             ElevatedButton(
               onPressed: () async {
-                  
-                  appState.newPostingData.update("name", petObject["name"]);
+                  appState.newPostingData.update("name", (v) => petObject["name"]);
                   appState.newPostingData.update("description", (v) => _descriptionController.text);
                   appState.newPostingData.update("missingSince", (v) => selectedDate);
                   appState.newPostingData.update("createdAt", (v) => DateTime.now().toIso8601String(),);

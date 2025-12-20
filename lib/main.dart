@@ -17,21 +17,57 @@ import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    debugPrint("success init fb!");
+  } catch (e,s) {
+    debugPrint("error init fb: $e | $s");
+  }
+  
+
+  final settings = SettingsController(
+    persistence: LocalStorageSettingsPersistence(),
   );
+  final palette = ColorPalette();
 
 
+  print(" *  * *  * *  * *  * *  * *  * *  *");
+  print("------------- BEFORE ---------------");
+  print("deviceSizeInfo   ${settings.deviceSizeInfo.value}");
+  print("theme            ${settings.theme.value}");
+  print("userData         ${settings.userData.value}");
+  print("petData          ${settings.petData.value}");
+  print(" *  * *  * *  * *  * *  * *  * *  *");
+
+  await settings.loadStateFromPersistence();
+  palette.selectTheme2(settings.theme.value);
+
+  print(" *  * *  * *  * *  * *  * *  * *  *");
+  print("------------- AFTER ---------------");
+  print("deviceSizeInfo   ${settings.deviceSizeInfo.value}");
+  print("theme            ${settings.theme.value}");
+  print("userData         ${settings.userData.value}");
+  print("petData          ${settings.petData.value}");  
+  print(" *  * *  * *  * *  * *  * *  * *  *");  
+  
 
   runApp(MyApp(
+    settings: settings,
     settingsPersistence: LocalStorageSettingsPersistence(),
+    palette: palette,
   ));
 }
 class MyApp extends StatefulWidget {
+    final SettingsController settings;
     final SettingsPersistence settingsPersistence;
+    final ColorPalette palette;
   const MyApp({
     super.key,
+    required this.settings,
     required this.settingsPersistence,
+    required this.palette,
   });
 
   @override
@@ -57,14 +93,16 @@ class _MyAppState extends State<MyApp> {
     return AppLifecycleObserver(
       child: MultiProvider(
         providers: [
-          ChangeNotifierProvider(create: (_) => ColorPalette()),
+          // ChangeNotifierProvider(create: (_) => ColorPalette()),
           ChangeNotifierProvider(create: (_) => AppState()),
-          Provider<SettingsController>(
-            lazy: false,
-            create: (context) => SettingsController(
-              persistence: widget.settingsPersistence
-            )..loadStateFromPersistence(),
-          ),          
+          ChangeNotifierProvider.value(value: widget.palette,),
+          Provider<SettingsController>.value(value: widget.settings,),
+          // Provider<SettingsController>(
+          //   lazy: false,
+          //   create: (context) => SettingsController(
+          //     persistence: widget.settingsPersistence
+          //   )..loadStateFromPersistence(),
+          // ),          
         ],
         child: Consumer<ColorPalette>(
           builder: (context, palette, _) {

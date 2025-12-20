@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:tempoct2025/functions/helpers.dart';
 import 'package:tempoct2025/resources/auth_service.dart';
+import 'package:tempoct2025/screens/authentication/components/auth_error_dialog.dart';
 import 'package:tempoct2025/screens/authentication/components/auth_provider_tile.dart';
 import 'package:tempoct2025/screens/authentication/components/login_button.dart';
 import 'package:tempoct2025/screens/authentication/login_textfield.dart';
@@ -27,6 +28,23 @@ class _LoginScreenState extends State<LoginScreen> {
 
   final passwordController = TextEditingController();
 
+  // void signInUser() async {
+  //   FocusManager.instance.primaryFocus?.unfocus();
+  //   try {
+  //     await FirebaseAuth.instance.signInWithEmailAndPassword(
+  //       email: emailController.text, 
+  //       password: passwordController.text
+  //     );
+
+  //   } on FirebaseAuthException catch (e) {
+  //     if (mounted) {
+  //       debugPrint(e.toString());
+  //       AuthService().authenticationFailed(context, e.code);
+  //     }
+  //   }
+    
+  //   // Navigator.pop(context);
+  // }
   void signInUser() async {
     FocusManager.instance.primaryFocus?.unfocus();
     try {
@@ -36,14 +54,49 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
     } on FirebaseAuthException catch (e) {
-      if (mounted) {
-        debugPrint(e.toString());
-        AuthService().authenticationFailed(context, e.code);
-      }
+      showDialog(
+        context: context,
+        builder: (_) => AuthErrorDialog(
+          errorTitle: "Google Sign-in Error",
+          errors: [e.toString()],
+        ),
+      );
     }
-    
-    // Navigator.pop(context);
-  }
+  }  
+
+
+  void onGooglePressed() async {
+    final result = await AuthService().signInWithGoogle();
+
+    if (!mounted) return;
+
+    if (!result.isSuccess) {
+      showDialog(
+        context: context,
+        builder: (_) => AuthErrorDialog(
+          errorTitle: "Google Sign-in Error",
+          errors: [result.errorMessage!],
+        ),
+      );
+    }
+  }  
+
+  void onApplePressed() async {
+    final result = await AuthService().signInWithApple();
+
+    if (!mounted) return;
+
+    if (!result.isSuccess) {
+      showDialog(
+        context: context,
+        builder: (_) => AuthErrorDialog(
+          errorTitle: "Apple Sign-in Error",
+          errors: [result.errorMessage!],
+        ),
+      );
+    }
+  }    
+
 
 
   @override
@@ -69,13 +122,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Column(
                         mainAxisSize: MainAxisSize.max,
                         children: [
- 
+                          Expanded(child: SizedBox(),),
                           Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
+
                               Text(
                                 "Welcome back!",
-                                // style: TextStyle(color: Colors.grey[700],fontSize: 24),
+                                style: TextStyle(color: Colors.grey[700],fontSize: 44),
                                 // style: TextStyle(color: palette.text1,fontSize: 24*scalor),
 
                               ),
@@ -122,7 +176,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   AuthProviderTile(
-                                    onTap: () => AuthService().signInWithGoogle(context), 
+                                    onTap: () => onGooglePressed(), 
                                       
                                     
                                     iconData: Icons.g_mobiledata,
@@ -130,7 +184,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   SizedBox(width: 10,),
                                       
                                   AuthProviderTile(
-                                    onTap: () => AuthService().signInWithApple(context),
+                                    onTap: () => onApplePressed(),
                                     iconData: Icons.apple,
                                   ),                        
                                              
@@ -156,6 +210,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),                    
                             ],
                           ),
+                          Expanded(child: SizedBox(),),
                         ],
                       ),
                     ),

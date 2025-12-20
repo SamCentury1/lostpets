@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tempoct2025/functions/helpers.dart';
 import 'package:tempoct2025/resources/auth_service.dart';
+import 'package:tempoct2025/screens/authentication/components/auth_error_dialog.dart';
 import 'package:tempoct2025/screens/authentication/components/auth_provider_tile.dart';
 import 'package:tempoct2025/screens/authentication/components/login_button.dart';
 import 'package:tempoct2025/screens/authentication/login_textfield.dart';
@@ -29,33 +30,102 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final password2Controller = TextEditingController();
   // final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  void registerUser() async {
-    FocusManager.instance.primaryFocus?.unfocus();
-    try {
-      List<String> errors = [];
-      if (password1Controller.text != password2Controller.text) {
-        errors.add("passwords don't match");
-      }
+  // void registerUser() async {
+  //   FocusManager.instance.primaryFocus?.unfocus();
+  //   try {
+  //     List<String> errors = [];
+  //     if (password1Controller.text != password2Controller.text) {
+  //       errors.add("passwords don't match");
+  //     }
 
-      if (password1Controller.text.length <= 6) {
-        errors.add("passowrd must be over 6 characters");        
-      }
+  //     if (password1Controller.text.length <= 6) {
+  //       errors.add("passowrd must be over 6 characters");        
+  //     }
 
-      if (errors.isEmpty) {
+  //     if (errors.isEmpty) {
 
-        await AuthService().registerUserManually(emailController.text, password1Controller.text,firstNameController.text, lastNameController.text);
+  //       await AuthService().registerUserManually(emailController.text, password1Controller.text,firstNameController.text, lastNameController.text);
    
-      } else {
-        AuthService().showLoginFailedDialog(context, "Errors", errors);
-      }
+  //     } else {
+  //       AuthService().showLoginFailedDialog(context, "Errors", errors);
+  //     }
 
-    } on FirebaseAuthException catch (e) {
-      if (mounted) {
-        debugPrint(e.toString());
-        AuthService().authenticationFailed(context, e.code);
-      }
+  //   } on FirebaseAuthException catch (e) {
+  //     if (mounted) {
+  //       debugPrint(e.toString());
+  //       AuthService().authenticationFailed(context, e.code);
+  //     }
+  //   }
+  // }
+
+  Future<void> registerUser() async {
+    FocusManager.instance.primaryFocus?.unfocus();
+
+    final List<String> errors = [];
+
+    if (password1Controller.text != password2Controller.text) {
+      errors.add("Passwords don't match");
+    }
+
+    if (password1Controller.text.length < 7) {
+      errors.add("Password must be at least 7 characters");
+    }
+
+    if (errors.isNotEmpty) {
+      AuthService().showLoginFailedDialog(context, "Errors", errors);
+      return;
+    }
+
+
+    final result = await AuthService().registerUserManually(
+      emailController.text.trim(),
+      password1Controller.text,
+      firstNameController.text.trim(),
+      lastNameController.text.trim(),
+    );
+
+    if (!mounted) return;
+
+    if (!result.isSuccess) {
+      AuthService().showLoginFailedDialog(
+        context,
+        "Registration Failed",
+        [result.errorMessage ?? "Something went wrong"],
+      );
     }
   }
+
+  void onGooglePressed() async {
+    final result = await AuthService().signInWithGoogle();
+
+    if (!mounted) return;
+
+    if (!result.isSuccess) {
+      showDialog(
+        context: context,
+        builder: (_) => AuthErrorDialog(
+          errorTitle: "Google Sign-in Error",
+          errors: [result.errorMessage!],
+        ),
+      );
+    }
+  }  
+
+  void onApplePressed() async {
+    final result = await AuthService().signInWithApple();
+
+    if (!mounted) return;
+
+    if (!result.isSuccess) {
+      showDialog(
+        context: context,
+        builder: (_) => AuthErrorDialog(
+          errorTitle: "Apple Sign-in Error",
+          errors: [result.errorMessage!],
+        ),
+      );
+    }
+  }     
 
   @override
   Widget build(BuildContext context) {
@@ -77,12 +147,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       child: Column(
                         mainAxisSize: MainAxisSize.max,
                         children: [
-                              
+                          Expanded(child: SizedBox(),),
                           Column(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
                               Text(
                                 "Welcome!",
+                                style: TextStyle(color: Colors.grey[700],fontSize: 44),
                               ),
                             
                               LoginTextField(controller: firstNameController, hintText: 'First Name', obscureText: false,),
@@ -121,13 +192,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   AuthProviderTile(
-                                    onTap: () => AuthService().signInWithGoogle(context),
+                                    onTap: () => onGooglePressed(),
                                     iconData: Icons.g_mobiledata,
                                   ),
                                   SizedBox(width: 10,),
                             
                                   AuthProviderTile(
-                                    onTap: () => AuthService().signInWithApple(context),
+                                    onTap: () => onApplePressed(),
                                     iconData: Icons.apple,
                                   ),
                                 ],
@@ -152,6 +223,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               )
                             ],
                           ),
+                          Expanded(child: SizedBox(),),
                               
                           // Expanded(flex: 4, child:SizedBox())
                         ],

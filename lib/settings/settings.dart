@@ -5,9 +5,10 @@ import 'package:tempoct2025/settings/persistence/settings_persistence.dart';
 class SettingsController {
   final SettingsPersistence _persistence;
   ValueNotifier<Object> deviceSizeInfo = ValueNotifier({});
-  ValueNotifier<String> theme = ValueNotifier("default");  
+  ValueNotifier<String> theme = ValueNotifier("light");  
   ValueNotifier<Object> userData = ValueNotifier({});
   ValueNotifier<List<dynamic>> petData = ValueNotifier([]);
+  ValueNotifier<List<dynamic>> requestsData = ValueNotifier([]);
 
 
 
@@ -23,6 +24,7 @@ class SettingsController {
       _persistence.getTheme().then((value) => theme.value = value),
       _persistence.getUserData().then((value) => userData.value = value),
       _persistence.getPetData().then((value) => petData.value = value),
+      _persistence.getRequestsData().then((value) => requestsData.value = value),
       // _persistence.getColorTheme().then((value) => colorTheme.value = value),
 
     ]);
@@ -49,5 +51,10 @@ class SettingsController {
     petData.value = value;
     _persistence.savePetData(petData.value);
   }
+
+  void setRequestsData(List<dynamic> value) {
+    requestsData.value = value;
+    _persistence.saveRequestsData(requestsData.value);
+  }  
 
 }
